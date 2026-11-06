@@ -170,7 +170,9 @@ expected_tools=(bsdtar bsdcpio bsdcat)
 # Static links of OpenSSL and libxml2 need these after them on the link line; the standard libraries
 # come last, so they resolve what the static archives leave open.
 static_std_libs="-liconv -llzma -lz -lbcrypt -lcrypt32 -lws2_32 -luser32 -ladvapi32 -lshell32 -lole32 -lkernel32"
-static_args=(-DBUILD_SHARED_LIBS=OFF "-DCMAKE_C_STANDARD_LIBRARIES=${static_std_libs}")
+# libarchive's LIBXML_STATIC probe only compiles, so it misses that MXE's libxml2 is static and the XAR
+# code then expects __imp_xml* DLL imports. Define it for the static variant.
+static_args=(-DBUILD_SHARED_LIBS=OFF "-DCMAKE_C_STANDARD_LIBRARIES=${static_std_libs}" -DCMAKE_C_FLAGS=-DLIBXML_STATIC)
 shared_args=(-DBUILD_SHARED_LIBS=ON)
 for tool in TAR CPIO CAT UNZIP; do
     has_option "ENABLE_${tool}_SHARED" || continue
