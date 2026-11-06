@@ -24,10 +24,15 @@ on:
 
 permissions: {}
 
+# bash -eo pipefail, so a failure inside a pipeline fails the step.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   image:
     runs-on: ubuntu-latest
-    # MXE builds GCC and every dependency for two targets: about two to four hours.
+    # MXE builds GCC and every dependency for two targets: about an hour (56 minutes on the first run).
     timeout-minutes: 350
     permissions:
       contents: read

@@ -53,7 +53,7 @@ for pkg in "${!mk_files[@]}"; do
     ver=${versions[${pkg}]}
     tarball=$(find pkg -maxdepth 1 -type f \( -name "${pkg}-${ver}.*" -o -name "${pkg}-v${ver}.*" \) | head -n 1)
     [[ -n ${tarball} ]] || { echo "error: no source tarball for ${pkg} ${ver} in ${mxe_dir}/pkg" >&2; exit 1; }
-    mapfile -t members < <(tar -tf "${tarball}" | grep -E '^[^/]+/((COPYING|LICEN[CS]E|COPYRIGHT|NOTICE)[^/]*)$|^[^/]+/mingw-w64-libraries/winpthreads/COPYING$|^[^/]+/COPYING\.MinGW-w64(-runtime)?/[^/]+$' || true)
+    mapfile -t members < <(tar -tf "${tarball}" | grep -iE '^[^/]+/((COPYING|LICEN[CS]E|COPYRIGHT|NOTICE)[^/]*)$|^[^/]+/mingw-w64-libraries/winpthreads/COPYING$|^[^/]+/COPYING\.MinGW-w64(-runtime)?/[^/]+$' || true)
     [[ ${#members[@]} -gt 0 ]] || { echo "error: no licence files found in ${tarball}" >&2; exit 1; }
     dest="licenses/${pkg}"
     mkdir -p "${dest}"

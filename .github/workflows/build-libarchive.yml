@@ -41,6 +41,11 @@ concurrency:
     build-libarchive-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
   cancel-in-progress: false
 
+# bash -eo pipefail, so a failure inside a pipeline fails the step.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   version:
     runs-on: ubuntu-latest

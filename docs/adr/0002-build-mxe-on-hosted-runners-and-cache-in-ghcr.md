@@ -16,7 +16,7 @@ We will build the MXE environment as a Docker image (`mxe/Dockerfile`: Ubuntu 24
 ## Consequences
 
 - The shared Windows host is never involved in Linux builds.
-- Any committed change to `mxe/` (an MXE bump, a package added) triggers one rebuild of a few hours, then every libarchive build reuses the image.
+- Any committed change to `mxe/` (an MXE bump, a package added) triggers one rebuild of about an hour (the first build took 56 minutes), then every libarchive build reuses the image.
 - The GHCR package starts private; this repo's `GITHUB_TOKEN` can pull it. Make it public if other repos need it.
 - If MXE outgrows 6 hours, split the image into a toolchain stage and a packages stage (`mxe-builder`).
 

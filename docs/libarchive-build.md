@@ -91,11 +91,11 @@ gh run watch --repo zippy1981/windows-nano-baseimages
 gh release view v3.8.11 --repo zippy1981/windows-nano-baseimages
 ```
 
-The first run builds the MXE image, which takes two to four hours. Later runs reuse it and take about 15 minutes. A dispatch from another branch builds and tests, but doesn't publish. A push that touches `mxe/`, the build or test scripts, `keys/` or these workflows runs a test build of `TEST_VERSION` (set in `build-libarchive.yml`).
+The first run builds the MXE image, which takes about an hour. Later runs reuse it and skip that step. A dispatch from another branch builds and tests, but doesn't publish. A push that touches `mxe/`, the build or test scripts, `keys/` or these workflows runs a test build of `TEST_VERSION` (set in `build-libarchive.yml`).
 
 ### Locally, on Linux
 
-Build the image (hours), or pull the cached one:
+Build the image (about an hour), or pull the cached one:
 
 ```bash
 docker build --tag mxe-libarchive:local mxe
