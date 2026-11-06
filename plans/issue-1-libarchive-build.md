@@ -28,7 +28,7 @@ Cross-compile any libarchive release for 64-bit Windows from Linux with MXE, tes
 ### Phase 2: MXE build environment
 
 - [x] **mxe-builder**: `mxe/Dockerfile` and `mxe/record-mxe-info.sh`. Accept: `record-mxe-info.sh` passes shellcheck and writes `mxe-info.json`, licences and the libiconv source from an MXE tree.
-- [ ] **mxe-builder**: the image builds in `mxe-image.yml` and both targets compile a C program. Accept: a green `image` job, and the tag in GHCR.
+- [x] **mxe-builder**: the image builds in `mxe-image.yml` and both targets compile a C program. Accept: a green `image` job, and the tag in GHCR. Done: 56 minutes, 1.02 GB compressed.
 
 ### Phase 3: Runner management (deferred)
 
@@ -37,12 +37,12 @@ Cross-compile any libarchive release for 64-bit Windows from Linux with MXE, tes
 ### Phase 4 and 5: Build and packaging
 
 - [x] **libarchive-builder**: `scripts/build-libarchive.sh`. Accept: shellcheck passes; it rejects a bad version and a missing MXE tree.
-- [ ] **libarchive-builder**: a test build of 3.8.11. Accept: the `build` job is green and uploads the three zips, the manifest and `SHA256SUMS`.
+- [x] **libarchive-builder**: a test build of 3.8.11. Accept: the `build` job is green and uploads the three zips, the manifest and `SHA256SUMS`. Done: every required feature found; the static tools import only `bcrypt`, `KERNEL32` and `msvcrt`.
 
 ### Phase 6 and 7: Workflows
 
 - [x] **release-engineer**: `build-libarchive.yml`, `watch-upstream.yml`, `scripts/trigger-latest-release.sh` and `scripts/Test-LibarchivePackage.ps1`. Accept: `trigger-latest-release.sh --dry-run` reports both releases missing for 3.8.11.
-- [ ] **release-engineer**: the smoke tests pass on `windows-2022` and `windows-2025`, including Nano Server. Accept: green `smoke-test` jobs.
+- [x] **release-engineer**: the smoke tests pass on `windows-2022` and `windows-2025`, including Nano Server. Accept: green `smoke-test` jobs. Done: all six jobs, with Nano Server ltsc2022 and ltsc2025.
 - [ ] **release-engineer**: after merging to `main`, dispatch 3.8.11, then run the watcher twice. Accept: both releases exist with the named assets; the second watcher run logs "Up to date".
 - [x] **workflow-author**: `lint-scripts.yml` (actionlint, shellcheck, PSScriptAnalyzer). Accept: green on the branch.
 

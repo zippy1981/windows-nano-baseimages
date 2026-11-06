@@ -51,7 +51,9 @@ WORKDIR /opt/mxe
 COPY --chown=mxe:mxe record-mxe-info.sh /opt/mxe-tools/record-mxe-info.sh
 
 # Fetch the pinned commit only, build both targets in one tree, record versions and licences, then drop
-# the downloads, logs and temporary trees so the layer holds only the installed toolchain.
+# the downloads, logs and temporary trees so the layer holds only the installed toolchain. ccache is
+# off (MXE_USE_CCACHE empty): a one-shot build gains nothing from it, and with it on MXE's CMake
+# toolchain points at wrappers in the .ccache tree.
 RUN git init -q . \
  && git remote add origin https://github.com/mxe/mxe.git \
  && git fetch -q --depth 1 origin "${MXE_COMMIT}" \
@@ -60,6 +62,7 @@ RUN git init -q . \
  && make --jobs=2 \
       MXE_TARGETS='x86_64-w64-mingw32.static x86_64-w64-mingw32.shared' \
       JOBS="${MXE_JOBS:-$(nproc)}" \
+      MXE_USE_CCACHE= \
       ${MXE_PACKAGES} \
  && bash /opt/mxe-tools/record-mxe-info.sh /opt/mxe "${MXE_PACKAGES}" \
  && rm -rf pkg log tmp-* .ccache \

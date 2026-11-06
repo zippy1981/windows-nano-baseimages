@@ -176,5 +176,5 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 - **The self-hosted runner and `Run-MxeRunner.ps1` from issue #1 are not implemented.** Builds use hosted runners instead (ADR 0002); add them only if a persistent runner is wanted.
 - **ltsc2019 isn't tested here.** Hosted runners have no Server 2019 image. The tools import only system DLLs and `msvcrt.dll`, which ltsc2019 has; the Nano Server images test them on ltsc2019.
 - **libarchive's own test suite doesn't run**, because it needs Windows. The smoke tests cover each format and filter instead.
-- **`bsdtar --version` doesn't list OpenSSL or libxml2.** The manifest's `config.h` features are the record for those.
+- **`bsdtar --version` doesn't list OpenSSL.** It lists zlib, liblzma, bz2lib, liblz4, libzstd, libxml2 and cng; the manifest's `config.h` features record OpenSSL. libarchive uses Windows CNG for its digests and zip encryption, and OpenSSL where CNG has no implementation.
 - **Only the latest upstream release is watched.** Older versions can be dispatched by hand; options a release lacks are skipped and features it can't find fail the build.
