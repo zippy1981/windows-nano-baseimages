@@ -155,7 +155,8 @@ required_defines=(HAVE_ZLIB_H HAVE_LIBZ HAVE_BZLIB_H HAVE_LIBBZ2 HAVE_LZMA_H HAV
 # Reported, not required: libb2 is not in MXE, so libarchive uses its bundled BLAKE2.
 optional_defines=(HAVE_LIBB2 HAVE_BLAKE2_H HAVE_LIBXMLLITE HAVE_LIBEXPAT HAVE_LZO_LZOCONF_H)
 
-common_args=(-DCMAKE_BUILD_TYPE=Release -DENABLE_INSTALL=ON)
+# MXE_USE_CCACHE=OFF: the toolchain then calls the real compilers in usr/bin, not ccache wrappers.
+common_args=(-DCMAKE_BUILD_TYPE=Release -DENABLE_INSTALL=ON -DMXE_USE_CCACHE=OFF)
 for opt in "${want_on[@]}"; do
     if has_option "${opt}"; then common_args+=("-D${opt}=ON"); else log "note: ${opt} is not an option in ${version}"; fi
 done
