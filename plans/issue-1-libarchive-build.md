@@ -12,7 +12,7 @@ Cross-compile any libarchive release for 64-bit Windows from Linux with MXE, tes
 
 ## Decisions
 
-- Build the MXE image on hosted runners and cache it in GHCR, tagged by the git tree hash of `mxe/`. ADR [0002](../docs/adr/0002-build-mxe-on-hosted-runners-and-cache-in-ghcr.md).
+- Build the MXE image on hosted runners and cache it in GHCR, tagged by the git tree hash of `mxe/`. ADR [0002](../docs/adr/0002-build-mxe-on-hosted-runners-and-cache-in-ghcr.md). Since replaced by a weekly image build that libarchive builds pull as `:latest`: ADR [0005](../docs/adr/0005-build-the-mxe-image-on-its-own-schedule.md).
 - Release scheme `vX.Y.Z` plus `static-X.Y.Z`, published only from the default branch, assets replaced in place. ADR [0003](../docs/adr/0003-libarchive-release-scheme.md).
 - Feature set: every external library MXE provides, except LZO (GPL-2.0), mbedTLS and Nettle (duplicate OpenSSL) and PCRE 1. libxml2 is used for XAR; Expat is built but unused. ADR [0004](../docs/adr/0004-libarchive-feature-set.md).
 - Verify release tarballs with `gpgv` against keys committed in `keys/`, because upstream publishes signatures, not hashes.
