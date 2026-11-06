@@ -1,0 +1,11 @@
+# Pre-commit hooks. Install once per clone:  pre-commit install   (or: uv run --with pre-commit pre-commit install)
+# Run by hand:                             pre-commit run --all-files
+# Local hooks only, so no third-party hook repositories are downloaded.
+repos:
+  - repo: local
+    hooks:
+      - id: markdownlint
+        name: markdownlint
+        entry: npx -y markdownlint-cli --fix
+        language: system
+        types: [markdown]

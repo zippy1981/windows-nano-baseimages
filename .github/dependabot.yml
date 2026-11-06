@@ -1,0 +1,7 @@
+# Keep workflow actions current; Dependabot opens pull requests, which go through the same required checks.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

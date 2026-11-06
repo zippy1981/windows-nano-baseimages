@@ -1,0 +1,31 @@
+# markdownlint over every tracked Markdown file. `markdownlint` is a required check on main, so this workflow has
+# no path filters: a required check that never starts would block the pull request.
+name: Lint Markdown
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: npm install -g markdownlint-cli
+
+      - run: markdownlint --dot '**/*.md'
