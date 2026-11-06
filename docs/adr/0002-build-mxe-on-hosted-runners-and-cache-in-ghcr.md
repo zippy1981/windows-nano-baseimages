@@ -1,6 +1,6 @@
 # 0002. Build MXE on hosted runners and cache it in GHCR
 
-- Status: Proposed
+- Status: Proposed; image tagging and the build coupling superseded by [0005](0005-build-the-mxe-image-on-its-own-schedule.md)
 - Date: 2026-11-06
 - Deciders: zippy1981
 - Related: [issue #1](https://github.com/zippy1981/windows-nano-baseimages/issues/1), [plan](../../plans/issue-1-libarchive-build.md), `mxe/Dockerfile`, `.github/workflows/mxe-image.yml`

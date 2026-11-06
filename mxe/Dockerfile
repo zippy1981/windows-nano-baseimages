@@ -1,7 +1,8 @@
 # mxe-libarchive: a Linux MXE cross-compile environment that builds libarchive for 64-bit Windows.
 # It holds MXE's x86_64-w64-mingw32.static and x86_64-w64-mingw32.shared targets with libarchive's
-# dependencies, and runs as the non-root user "mxe". CI builds it once per change to mxe/ and caches it
-# in GHCR (.github/workflows/mxe-image.yml). Building it takes about an hour on a hosted runner.
+# dependencies, and runs as the non-root user "mxe". CI rebuilds it weekly, and when mxe/ changes on
+# main, and pushes it to GHCR (.github/workflows/mxe-image.yml). Building it takes about an hour on a
+# hosted runner.
 #
 #   docker build --build-arg MXE_JOBS=8 -t mxe-libarchive:local mxe
 #
