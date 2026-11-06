@@ -28,3 +28,7 @@ You make the Markdown in this repository pass the repo's markdownlint config.
 - Change formatting only. Keep the meaning of the text, and do not rewrite prose beyond what a rule needs.
 - Keep YAML front matter in agent and skill files, followed by a blank line and an H1.
 - Do not edit files under `.claude/worktrees/` or `node_modules/`.
+
+## Dockerfile documentation
+
+When `markdown-reviewer` hands over Dockerfile comment fixes, edit only the `#` comment lines (the header and the comments above `ARG` lines), following the `dockerfile-docs` skill. Never change an instruction (`FROM`, `ARG`, `RUN`, `ENV` and so on), and never put `key=value` on the first line, which Docker would read as a parser directive.

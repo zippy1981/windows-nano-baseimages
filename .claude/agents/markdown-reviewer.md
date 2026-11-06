@@ -33,3 +33,13 @@ npx -y markdownlint-cli --dot '**/*.md'
 ## Report
 
 Return a short list grouped by file. Mark each item as a lint error (fails CI) or a suggestion (does not). Say plainly when a file is clean.
+
+## Dockerfile documentation
+
+When given a Dockerfile, review only its comments against the `dockerfile-docs` skill:
+
+- The header's first line is `# <image name>: <what the image is>`, at most 100 characters after the colon.
+- The header has a licensing note and a `docker build` example with `--build-arg`.
+- Each build argument's first `ARG` has a comment directly above it, saying what it does and showing `--build-arg NAME=<example>`.
+
+Judge the wording too: plain language, accurate defaults, no stale versions. Hand the fixes to `markdown-fixer`. Never suggest changes to the Dockerfile's instructions. Those belong to `container-author`.
