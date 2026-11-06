@@ -203,6 +203,7 @@ jobs:
 
       - name: Write the release notes
         run: |
+          # shellcheck disable=SC2016 # jq programs are single-quoted on purpose.
           m="out/libarchive-${VERSION}-windows-x64-manifest.json"
           jq -e --arg v "${VERSION}" '.libarchive_version == $v' "${m}" >/dev/null \
             || { echo "::error::the manifest is for $(jq -r .libarchive_version "${m}"), not ${VERSION}"; exit 1; }

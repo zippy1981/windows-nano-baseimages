@@ -129,7 +129,7 @@ top_dirs=$(cut -d/ -f1 "${work}/tar-list.txt" | sort -u)
 [[ ${top_dirs} == "${name}" ]] || die "expected the tarball to contain only ${name}/, found: ${top_dirs//$'\n'/ }"
 tar -xf "${tarball}" -C "${work}"
 src=${work}/${name}
-header_version=$(sed -n 's/^#define ARCHIVE_VERSION_ONLY_STRING "\(.*\)"$/\1/p' "${src}/libarchive/archive.h")
+header_version=$(sed -n 's/^#define[[:space:]]\{1,\}ARCHIVE_VERSION_ONLY_STRING[[:space:]]\{1,\}"\(.*\)"$/\1/p' "${src}/libarchive/archive.h")
 [[ ${header_version} == "${version}" ]] || die "archive.h says version '${header_version}', not ${version}"
 
 # --- Feature matrix ----------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ build_variant() {
 
     local missing=() define
     for define in "${required_defines[@]}"; do
-        grep -qE "^#define ${define}( |$)" "${build}/config.h" || missing+=("${define}")
+        grep -qE "^#define[[:space:]]+${define}([[:space:]]|$)" "${build}/config.h" || missing+=("${define}")
     done
     [[ ${#missing[@]} -eq 0 ]] || { tail -n 80 "${work}/configure-${variant}.log" >&2; die "${variant}: features not found by CMake: ${missing[*]}"; }
 
@@ -243,11 +243,11 @@ log "Collecting the shared executables' DLLs"
 shared_stage=${work}/stage-shared
 shared_target_dir=${mxe_dir}/usr/${shared_target}
 dll_search=("${shared_stage}/bin" "${shared_target_dir}/bin" "${shared_target_dir}/lib")
-while IFS= read -r dir; do dll_search+=("${dir}"); done < <(find "${mxe_dir}/usr/lib/gcc/${shared_target}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+while IFS= read -r dir; do dll_search+=("${dir}"); done < <(find -H "${mxe_dir}/usr/lib/gcc/${shared_target}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
 find_dll() {
     local dll=$1 dir hit
     for dir in "${dll_search[@]}"; do
-        hit=$(find "${dir}" -maxdepth 1 -type f -iname "${dll}" -print -quit 2>/dev/null)
+        hit=$(find -H "${dir}" -maxdepth 1 -type f -iname "${dll}" -print -quit 2>/dev/null)
         [[ -n ${hit} ]] && { echo "${hit}"; return 0; }
     done
     return 1
@@ -280,10 +280,10 @@ cmake_version=$(cmake --version | head -n 1 | awk '{print $3}')
 features_json() {
     local build=$1 define on=() off=()
     for define in "${required_defines[@]}" "${optional_defines[@]}"; do
-        if grep -qE "^#define ${define}( |$)" "${build}/config.h"; then on+=("${define}"); else off+=("${define}"); fi
+        if grep -qE "^#define[[:space:]]+${define}([[:space:]]|$)" "${build}/config.h"; then on+=("${define}"); else off+=("${define}"); fi
     done
     local crypto
-    crypto=$(grep -oE '^#define ARCHIVE_CRYPTO_[A-Z0-9_]+' "${build}/config.h" | awk '{print $2}' | sort -u || true)
+    crypto=$(grep -oE '^#define[[:space:]]+ARCHIVE_CRYPTO_[A-Z0-9_]+' "${build}/config.h" | awk '{print $2}' | sort -u || true)
     jq -n --args '{config_h_set: $ARGS.positional}' "${on[@]}" \
         | jq --args '. + {config_h_unset: $ARGS.positional}' "${off[@]}" \
         | jq --arg c "${crypto}" '. + {crypto: ($c | split("\n") | map(select(length > 0)))}'
@@ -416,7 +416,7 @@ d=${pkg_root}/${shared_name}
 mkdir -p "${d}/bin" "${d}/lib"
 cp -r "${shared_stage}/include" "${d}/include"
 cp "${shared_stage}"/bin/*.exe "${shared_stage}"/bin/*.dll "${d}/bin/"
-for path in "${shared_dlls[@]}"; do cp -n "${path}" "${d}/bin/"; done
+for path in "${shared_dlls[@]}"; do [[ -e ${d}/bin/$(basename "${path}") ]] || cp "${path}" "${d}/bin/"; done
 cp "${shared_stage}"/lib/*.dll.a "${d}/lib/"
 [[ -d ${shared_stage}/lib/pkgconfig ]] && cp -r "${shared_stage}/lib/pkgconfig" "${d}/lib/"
 [[ -d ${shared_stage}/share ]] && cp -r "${shared_stage}/share" "${d}/share"
