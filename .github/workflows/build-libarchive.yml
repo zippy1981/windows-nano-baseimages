@@ -203,7 +203,6 @@ jobs:
 
       - name: Write the release notes
         run: |
-          # shellcheck disable=SC2016 # jq programs are single-quoted on purpose.
           m="out/libarchive-${VERSION}-windows-x64-manifest.json"
           jq -e --arg v "${VERSION}" '.libarchive_version == $v' "${m}" >/dev/null \
             || { echo "::error::the manifest is for $(jq -r .libarchive_version "${m}"), not ${VERSION}"; exit 1; }
@@ -220,8 +219,10 @@ jobs:
           )
           sums=$(cd out && grep -E "windows-x64-(static|shared)\.zip$" SHA256SUMS)
           tools_sum=$(cd out && grep -E "windows-x64-static-tools\.zip$" SHA256SUMS)
+          # shellcheck disable=SC2016 # literal Markdown fences
           printf '%s\n\nThe command-line tools alone are in the static-%s release.\n\n```text\n%s\n```\n' \
             "${common}" "${VERSION}" "${sums}" >notes-full.md
+          # shellcheck disable=SC2016 # literal Markdown fences
           printf 'The static command-line tools (%s) from libarchive %s, with their licences. The full packages are in the v%s release.\n\n%s\n\n```text\n%s\n```\n' \
             "$(jq -r '.tools | join(", ")' "${m}")" "${VERSION}" "${VERSION}" "${common}" "${tools_sum}" >notes-static.md
 
