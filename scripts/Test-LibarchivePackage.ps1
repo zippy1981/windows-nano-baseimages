@@ -186,7 +186,7 @@ try {
         ) -join "`r`n"
         New-Item -ItemType Directory -Path (Join-Path $work 'nano-out') | Out-Null
         Set-Content -LiteralPath (Join-Path $work 'nano.cmd') -Value $script -Encoding ascii
-        $dockerArgs = @('run', '--rm', '--isolation', 'process', '-v', "${binDir}:C:\pkg:ro", '-v', "${work}:C:\work",
+        $dockerArgs = @('run', '--rm', '--isolation', 'process', '--user', 'ContainerAdministrator', '-v', "${binDir}:C:\pkg:ro", '-v', "${work}:C:\work",
             $NanoServerImage, 'cmd', '/S', '/C', 'C:\work\nano.cmd')
         try {
             Invoke-Tool 'docker' $dockerArgs | ForEach-Object { Write-Output "  $_" }
