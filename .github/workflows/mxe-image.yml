@@ -74,6 +74,24 @@ jobs:
             echo "exists=false" >>"${GITHUB_OUTPUT}"
           fi
 
+      # A seconds-long push of a tiny image to the same package, so a GHCR permission problem fails here
+      # rather than after the hour-long build. The label links a new package to this repository.
+      - name: Check GHCR push access
+        if: steps.exists.outputs.exists != 'true'
+        env:
+          IMAGE: ${{ steps.tag.outputs.image }}
+          SOURCE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          check="${IMAGE%:*}:push-check"
+          dir=$(mktemp -d)
+          printf 'push check\n' >"${dir}/push-check.txt"
+          printf 'FROM scratch\nCOPY push-check.txt /\nLABEL org.opencontainers.image.source="%s"\n' "${SOURCE}" >"${dir}/Dockerfile"
+          docker build --quiet --provenance=false --sbom=false --tag "${check}" "${dir}"
+          if ! docker push --quiet "${check}"; then
+            echo "::error::GHCR refused a push to ${check%:*}. If that package already exists, open its settings on GitHub (Packages), and under Manage Actions access add this repository with the Write role, or delete the package so the workflow can create it."
+            exit 1
+          fi
+
       - name: Free disk space
         if: steps.exists.outputs.exists != 'true'
         run: |
@@ -88,7 +106,7 @@ jobs:
           IMAGE: ${{ steps.tag.outputs.image }}
         run: |
           start=$(date +%s)
-          docker build --progress plain --tag "${IMAGE}" mxe 2>&1 | tee "${RUNNER_TEMP}/mxe-build.log"
+          docker build --progress plain --provenance=false --sbom=false --tag "${IMAGE}" mxe 2>&1 | tee "${RUNNER_TEMP}/mxe-build.log"
           echo "Built in $(( ($(date +%s) - start) / 60 )) minutes." | tee -a "${GITHUB_STEP_SUMMARY}"
 
       - name: Check the toolchain
