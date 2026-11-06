@@ -1,0 +1,65 @@
+# Static checks for the build automation: actionlint on the workflows (with shellcheck on their run
+# steps), shellcheck on the shell scripts, and PSScriptAnalyzer on the PowerShell scripts. No path
+# filters, so the checks can be made required without blocking unrelated pull requests.
+name: Lint scripts
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# bash -eo pipefail, so a failure inside a pipeline fails the step.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: actionlint
+        run: docker run --rm --volume "${GITHUB_WORKSPACE}:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          git ls-files -z '*.sh' | xargs -0 shellcheck -x
+
+  psscriptanalyzer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Scope CurrentUser -Force
+          $files = git ls-files '*.ps1' '*.psm1'
+          $results = $files | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Severity Warning, Error }
+          $results | Format-Table -AutoSize | Out-String -Width 200 | Write-Output
+          foreach ($f in $files) {
+            $errors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$null, [ref]$errors)
+            if ($errors) { Write-Output "::error file=$f::parse errors: $errors"; exit 1 }
+          }
+          if ($results) { exit 1 }

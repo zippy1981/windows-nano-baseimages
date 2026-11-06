@@ -42,14 +42,14 @@ $images = docker images --format '{{.Repository}}:{{.Tag}}' |
 foreach ($container in $containers) {
     if ($PSCmdlet.ShouldProcess($container, 'docker rm -f')) {
         docker rm -f $container | Out-Null
-        Write-Host "removed container $container"
+        Write-Information -InformationAction Continue "removed container $container"
     }
 }
 foreach ($image in $images) {
     $rmiArgs = if ($IncludeParents) { @('rmi', $image) } else { @('rmi', '--no-prune', $image) }
     if ($PSCmdlet.ShouldProcess($image, "docker $($rmiArgs -join ' ')")) {
         docker @rmiArgs | Out-Null
-        Write-Host "removed image $image"
+        Write-Information -InformationAction Continue "removed image $image"
     }
 }
-if (-not $containers -and -not $images) { Write-Host "Nothing matches '$Prefix'." }
+if (-not $containers -and -not $images) { Write-Information -InformationAction Continue "Nothing matches '$Prefix'." }

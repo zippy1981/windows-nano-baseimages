@@ -1,0 +1,46 @@
+# Checks once a day for a new libarchive release, and dispatches build-libarchive.yml for it if this repo
+# lacks either of its releases (vX.Y.Z or static-X.Y.Z). It never builds anything itself; the logic is in
+# scripts/trigger-latest-release.sh, which also runs outside Actions.
+name: Watch upstream libarchive
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only report what would be dispatched.
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: watch-upstream
+  cancel-in-progress: false
+
+# bash -eo pipefail, so a failure inside a pipeline fails the step.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check for a new libarchive release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          [[ ${DRY_RUN} == true ]] && args+=(--dry-run)
+          scripts/trigger-latest-release.sh "${args[@]}" 2>&1 | tee -a "${GITHUB_STEP_SUMMARY}"
