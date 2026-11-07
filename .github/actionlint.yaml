@@ -1,0 +1,6 @@
+# actionlint configuration. Custom labels of this repo's self-hosted Windows runners
+# (DEARING-HP-Z-base1 and -base2, ADR 0008), so runs-on: [self-hosted, windows, nanoserver, docker] passes.
+self-hosted-runner:
+  labels:
+    - nanoserver
+    - docker

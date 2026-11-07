@@ -1,0 +1,120 @@
+{
+  "comment": "Archives the nanoserver-base smoke test extracts with tar (issue 5). 'fixes' rows are failures of the Windows tar.exe recorded in windows-nano-demos; 'regression' rows already worked and must keep working. Zips are checked entry by entry against their central directory (path, size, SHA-256). The 7z is checked against tests/expected/<file>.json (path and size from its headers), because .NET can't read 7z. 'pipe' extracts with curl file:///... | tar -xf -, which is a real pipe.",
+  "pipeExpectedFailure": {
+    "issue": 8,
+    "reason": "libarchive on Windows drops about the first 64 KB of a zip read from a pipe and exits 0. Until issue 8 is fixed, every piped zip must show missing files; never pipe a zip into tar."
+  },
+  "archives": [
+    {
+      "name": "far",
+      "kind": "fixes",
+      "row": 1,
+      "url": "https://www.farmanager.com/files/Far30b6699.x64.20260614.7z",
+      "sha256": "0030e9bf36afded1fd0647fb105446a93c49ce15db32d554fad62146c0665063",
+      "pipe": false,
+      "executables": ["Far.exe"]
+    },
+    {
+      "name": "nano",
+      "kind": "fixes",
+      "row": 2,
+      "url": "https://github.com/okibcn/nano-for-windows/releases/download/v7.2-22.1/nano-for-windows_win64_v7.2-22.1.zip",
+      "sha256": "ce50a799a5fae37ac36ff2d7f3680968ca4af11a808edad96bcce746c13ccd20",
+      "pipe": true,
+      "executables": ["nano.exe"],
+      "expectedFailure": {
+        "issue": 7,
+        "reason": "libarchive has no Deflate64 (zip method 9) decoder. Until issue 7 adds one, tar must fail loudly instead of writing zero-byte files the way Windows' tar does.",
+        "output": "Unsupported ZIP compression method \\(9"
+      }
+    },
+    {
+      "name": "php",
+      "kind": "fixes",
+      "row": 3,
+      "url": "https://windows.php.net/downloads/releases/archives/php-8.5.12-1-nts-Win32-vs17-x64.zip",
+      "sha256": "2a36a2edcb7a5b9252f638fd5e4cf84d7f6e066092654220dc0b63e5cf4e9723",
+      "pipe": true,
+      "required": ["ext/php_curl.dll", "brotlicommon.dll"]
+    },
+    {
+      "name": "node",
+      "kind": "fixes",
+      "row": 4,
+      "url": "https://nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip",
+      "sha256": "dcc60d59a0746999f99064a01c020445d54d84228c691cdbf25b49ac3b59150a",
+      "pipe": true
+    },
+    {
+      "name": "go",
+      "kind": "fixes",
+      "row": 5,
+      "url": "https://go.dev/dl/go1.27.3.windows-amd64.zip",
+      "sha256": "f26081f438319757f8a1b46d7d0b2c5ec7583d4038e485e0aa725cfde7885fff",
+      "pipe": true
+    },
+    {
+      "name": "powershell",
+      "kind": "regression",
+      "url": "https://github.com/PowerShell/PowerShell/releases/download/v7.6.9/PowerShell-7.6.9-win-x64.zip",
+      "sha256": "ce7484804c0f0ad4dda10c958e71acdaf7eebfb22505c1b480f89e0e9f1da94d",
+      "pipe": true
+    },
+    {
+      "name": "mingit",
+      "kind": "regression",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-64-bit.zip",
+      "sha256": "e3bf78351fe777fba47ddee5950082f8a98bb0f02604fdc7ba3ee2cb68ffa877",
+      "pipe": true
+    },
+    {
+      "name": "mingit-busybox",
+      "kind": "regression",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-busybox-64-bit.zip",
+      "sha256": "c4f27d9356ef471dd9fea1f89e5c176cfff7c85b29912a00f3cc7fb59197a39f",
+      "pipe": true
+    },
+    {
+      "name": "micro",
+      "kind": "regression",
+      "url": "https://github.com/zyedidia/micro/releases/download/v2.0.15/micro-2.0.15-win64.zip",
+      "sha256": "90635c53c11aa2a0d997f5e3ed43528877740725500207640b29551cef18479b",
+      "pipe": true
+    },
+    {
+      "name": "gh-runner",
+      "kind": "regression",
+      "url": "https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-win-x64-2.338.2.zip",
+      "sha256": "a1f17aa987fc8158bc7521d284912267a0d01b7c2c4684b33c86783b5e8221cc",
+      "pipe": true
+    },
+    {
+      "name": "docker-cli",
+      "kind": "regression",
+      "url": "https://download.docker.com/win/static/stable/x86_64/docker-29.9.3.zip",
+      "sha256": "7c4ff7bbb31579046cd34dd8b91f7cbd3ab3482a1a85330170be726ef792d751",
+      "pipe": true
+    },
+    {
+      "name": "mysql",
+      "kind": "regression",
+      "url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.11-winx64.zip",
+      "sha256": "a492371d687d2bab088b0062581144a0044b8964baefdf4faa579292b423d25c",
+      "pipe": true
+    },
+    {
+      "name": "openssh",
+      "kind": "regression",
+      "url": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.4.0.0p1-Preview/OpenSSH-Win64.zip",
+      "sha256": "b67ff8becd203502190ec42ac7787c24c2cd3325ed7700485fe7a1c83d2a7957",
+      "pipe": true
+    },
+    {
+      "name": "llvm-mingw",
+      "kind": "regression",
+      "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261104/llvm-mingw-20261104-ucrt-x86_64.zip",
+      "sha256": "552191b5754c49a5a20723276a6fc56541ea1922c4c50b7b669022333fc1b40f",
+      "pipe": true
+    }
+  ]
+}
