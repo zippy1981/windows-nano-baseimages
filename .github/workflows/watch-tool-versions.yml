@@ -1,0 +1,48 @@
+# Opens a bump pull request when libarchive (this repo's static-* release), jq, Microsoft Edit or PowerShell has a
+# newer release than the nanoserver-base Dockerfiles pin, then starts the image build on that branch (issue 5).
+name: Watch tool versions
+
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  # This repo's own static-* releases are bumped as soon as they're published
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Only report what would change
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'static-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # Push the bump branch, open the pull request, and dispatch its checks
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check and bump
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          ./scripts/Update-ToolPin.ps1 -DryRun:($env:DRY_RUN -eq 'true')

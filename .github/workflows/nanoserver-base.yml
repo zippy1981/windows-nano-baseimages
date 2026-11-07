@@ -1,0 +1,137 @@
+# Builds and tests zippy1981/nanoserver-base and its -pwsh variant for ltsc2019, ltsc2022 and ltsc2025 on this
+# repo's self-hosted runners, and publishes them to Docker Hub from main (ADR 0004).
+# A weekly run rebuilds when Microsoft has published a new Nano Server base, and skips versions that are current.
+name: nanoserver-base
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'images/nanoserver-base/**'
+      - 'images/nanoserver-base-pwsh/**'
+      - 'tests/**'
+      - '.github/workflows/nanoserver-base.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'images/nanoserver-base/**'
+      - 'images/nanoserver-base-pwsh/**'
+      - 'tests/**'
+      - '.github/workflows/nanoserver-base.yml'
+  schedule:
+    # Tuesdays after Patch Tuesday's usual release time; a version whose published base is current is skipped
+    - cron: '17 6 * * 3'
+  workflow_dispatch:
+    inputs:
+      windows-versions:
+        description: JSON list of Windows versions to build
+        type: string
+        default: '["2019", "2022", "2025"]'
+      publish:
+        description: Push the tested images to Docker Hub (only on main)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels that pull request's older runs. Pushes to main always run to completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-and-test:
+    # The runners have the host's Docker engine, so never run code from forks on them (ADR 0004)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, windows, nanoserver, docker]
+    # The first run on a runner downloads about a gigabyte of test archives; later runs use the runner's cache
+    timeout-minutes: 120
+    # The Docker Hub secrets live in the "Docker Hub zippy1981" environment, used only when publishing from main
+    environment: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || inputs.publish) && 'Docker Hub zippy1981' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        windows-version: ${{ fromJSON(inputs.windows-versions || '["2019", "2022", "2025"]') }}
+    env:
+      WINDOWS_VERSION: ${{ matrix.windows-version }}
+      IMAGE: nanoserver-base:ci-${{ matrix.windows-version }}-${{ github.sha }}
+      PWSH_IMAGE: nanoserver-base:ci-${{ matrix.windows-version }}-pwsh-${{ github.sha }}
+      REPOSITORY: zippy1981/nanoserver-base
+      PUBLISH: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || inputs.publish) }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Pull and pin the base images (ltsc${{ matrix.windows-version }})
+        run: |
+          # Each run builds on the digest it pulled, and the published image records it in its labels
+          foreach ($name in 'nanoserver', 'servercore') {
+            $ref = "mcr.microsoft.com/windows/${name}:ltsc$env:WINDOWS_VERSION-amd64"
+            docker pull $ref
+            if ($LASTEXITCODE) { throw "docker pull $ref failed: $LASTEXITCODE" }
+            $digest = (docker image inspect $ref --format '{{index .RepoDigests 0}}')
+            if (-not $digest) { throw "No digest for $ref" }
+            "$($name.ToUpperInvariant())_IMAGE=$digest" >> $env:GITHUB_ENV
+            "$ref is $digest"
+          }
+
+      - name: Skip if the published image is current
+        id: current
+        if: github.event_name == 'schedule'
+        run: |
+          # Pushes to main publish every change to the images, so the weekly run only has to catch a new base digest
+          $label = ./scripts/Get-RegistryImageLabel.ps1 -Repository $env:REPOSITORY -Tag "ltsc$env:WINDOWS_VERSION"
+          $current = [bool]$label -and $label['org.opencontainers.image.base.digest'] -eq ($env:NANOSERVER_IMAGE -split '@')[1]
+          "skip=$($current.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if ($current) { "$env:REPOSITORY:ltsc$env:WINDOWS_VERSION is current, nothing to do" >> $env:GITHUB_STEP_SUMMARY }
+
+      - name: Build nanoserver-base
+        if: steps.current.outputs.skip != 'true'
+        working-directory: images/nanoserver-base
+        run: |
+          # Hyper-V isolated builds default to 1 GB of memory
+          docker build --memory 4g --build-arg WINDOWS_VERSION=$env:WINDOWS_VERSION `
+            --build-arg BASE_IMAGE=$env:NANOSERVER_IMAGE --build-arg DOWNLOAD_IMAGE=$env:SERVERCORE_IMAGE -t $env:IMAGE .
+          if ($LASTEXITCODE) { throw "docker build failed: $LASTEXITCODE" }
+
+      - name: Smoke test nanoserver-base
+        if: steps.current.outputs.skip != 'true'
+        # The runner is itself a container, so the test uses docker create and docker cp, never bind mounts
+        run: ./images/nanoserver-base/smoke-test.ps1 -Image $env:IMAGE
+
+      - name: Build nanoserver-base-pwsh
+        if: steps.current.outputs.skip != 'true'
+        working-directory: images/nanoserver-base-pwsh
+        run: |
+          docker build --memory 4g --build-arg WINDOWS_VERSION=$env:WINDOWS_VERSION `
+            --build-arg BASE_IMAGE=$env:IMAGE --build-arg DOWNLOAD_IMAGE=$env:SERVERCORE_IMAGE -t $env:PWSH_IMAGE .
+          if ($LASTEXITCODE) { throw "docker build failed: $LASTEXITCODE" }
+
+      - name: Smoke test nanoserver-base-pwsh
+        if: steps.current.outputs.skip != 'true'
+        run: ./images/nanoserver-base-pwsh/smoke-test.ps1 -Image $env:PWSH_IMAGE
+
+      - name: Image sizes
+        if: steps.current.outputs.skip != 'true'
+        run: docker image ls nanoserver-base --format '{{.Repository}}:{{.Tag}} {{.Size}}' | Where-Object { $_ -like "*${{ github.sha }}*" }
+
+      - name: Publish to Docker Hub
+        # Only the images that were just tested, only from main (ADR 0004)
+        if: env.PUBLISH == 'true' && steps.current.outputs.skip != 'true'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: ./scripts/Publish-Image.ps1 -Image $env:IMAGE -PwshImage $env:PWSH_IMAGE -Repository $env:REPOSITORY -WindowsVersion $env:WINDOWS_VERSION -BaseImage $env:NANOSERVER_IMAGE -Revision '${{ github.sha }}' -RepositoryUrl '${{ github.server_url }}/${{ github.repository }}'
+
+      - name: Cleanup
+        if: always()
+        run: |
+          foreach ($image in $env:PWSH_IMAGE, $env:IMAGE) {
+            docker ps -a --filter "ancestor=$image" -q | ForEach-Object { docker rm -f $_ }
+            # --no-prune keeps the untagged parent layers, which are the build cache for the next run on this daemon
+            docker rmi -f --no-prune $image 2>$null
+          }
+          exit 0

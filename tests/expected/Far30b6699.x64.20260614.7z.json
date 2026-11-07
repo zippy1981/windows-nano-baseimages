@@ -1,0 +1,2305 @@
+{
+ "source": "7z headers, read with py7zr 1.1.4",
+ "files": [
+  {
+   "path": "Addons/Colors/Custom Highlighting/Colors_from_Gernichenko.farconfig",
+   "size": 10166
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/Colors_from_Sadovoj.farconfig",
+   "size": 6807
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/Colors_from_admin_essp_ru.farconfig",
+   "size": 10354
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/Descript.ion",
+   "size": 1480
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/FARColors242.farconfig",
+   "size": 85958
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/GreenMile.farconfig",
+   "size": 8606
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/Rodion_Doroshkevich.farconfig",
+   "size": 8921
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/VaxColors.farconfig",
+   "size": 8142
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/black_from_Fonarev.farconfig",
+   "size": 6496
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/black_from_Myodov.farconfig",
+   "size": 9330
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/black_from_july.farconfig",
+   "size": 9036
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/dn_like.farconfig",
+   "size": 7992
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/hell.farconfig",
+   "size": 18328
+  },
+  {
+   "path": "Addons/Colors/Custom Highlighting/nc5pal2.farconfig",
+   "size": 8904
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/Colors_from_Gernichenko.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/Colors_from_Sadovoj.farconfig",
+   "size": 4800
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/Colors_from_admin_essp_ru.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/Descript.ion",
+   "size": 1480
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/FARColors242.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/GreenMile.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/Rodion_Doroshkevich.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/VaxColors.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/black_from_Fonarev.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/black_from_Myodov.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/black_from_july.farconfig",
+   "size": 4968
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/dn_like.farconfig",
+   "size": 4798
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/hell.farconfig",
+   "size": 5523
+  },
+  {
+   "path": "Addons/Colors/Default Highlighting/nc5pal2.farconfig",
+   "size": 4800
+  },
+  {
+   "path": "Addons/Colors/Descript.ion",
+   "size": 212
+  },
+  {
+   "path": "Addons/Colors/Interface/Colors_from_Gernichenko.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/Colors_from_Sadovoj.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/Colors_from_admin_essp_ru.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/Descript.ion",
+   "size": 1528
+  },
+  {
+   "path": "Addons/Colors/Interface/FARColors242.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/GreenMile.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/Rodion_Doroshkevich.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/VaxColors.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/black_and_white.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/black_from_Fonarev.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/black_from_Myodov.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/black_from_july.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/dn_like.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/hell.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Colors/Interface/nc5pal2.farconfig",
+   "size": 17637
+  },
+  {
+   "path": "Addons/Descript.ion",
+   "size": 239
+  },
+  {
+   "path": "Addons/Macros/AltMenu.lua",
+   "size": 303
+  },
+  {
+   "path": "Addons/Macros/AltScreens.lua",
+   "size": 279
+  },
+  {
+   "path": "Addons/Macros/AltSearch.lua",
+   "size": 316
+  },
+  {
+   "path": "Addons/Macros/AltX.lua",
+   "size": 204
+  },
+  {
+   "path": "Addons/Macros/CtrlDel.lua",
+   "size": 188
+  },
+  {
+   "path": "Addons/Macros/CtrlF10.lua",
+   "size": 800
+  },
+  {
+   "path": "Addons/Macros/Descript.ion",
+   "size": 3380
+  },
+  {
+   "path": "Addons/Macros/Dialog.AltDown.lua",
+   "size": 171
+  },
+  {
+   "path": "Addons/Macros/Edit.Notepad.lua",
+   "size": 745
+  },
+  {
+   "path": "Addons/Macros/Edit.OpenURL.lua",
+   "size": 5172
+  },
+  {
+   "path": "Addons/Macros/Edit.SaveAndExit.lua",
+   "size": 142
+  },
+  {
+   "path": "Addons/Macros/Edit.SaveFile.lua",
+   "size": 127
+  },
+  {
+   "path": "Addons/Macros/Edit.SelectionStartEnd.lua",
+   "size": 2074
+  },
+  {
+   "path": "Addons/Macros/Edit.SyncEditorAndFindAllMenu.lua",
+   "size": 7490
+  },
+  {
+   "path": "Addons/Macros/Editor.ColorWord.moon",
+   "size": 4239
+  },
+  {
+   "path": "Addons/Macros/F3.lua",
+   "size": 564
+  },
+  {
+   "path": "Addons/Macros/F9DeactivateMenu.lua",
+   "size": 140
+  },
+  {
+   "path": "Addons/Macros/F9Table.lua",
+   "size": 875
+  },
+  {
+   "path": "Addons/Macros/Menu.CtrlClear.lua",
+   "size": 590
+  },
+  {
+   "path": "Addons/Macros/OpeningLastFile.lua",
+   "size": 389
+  },
+  {
+   "path": "Addons/Macros/Panel.AltBS.lua",
+   "size": 614
+  },
+  {
+   "path": "Addons/Macros/Panel.Apps.lua",
+   "size": 188
+  },
+  {
+   "path": "Addons/Macros/Panel.BS.lua",
+   "size": 169
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlIns...lua",
+   "size": 585
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlLeftRight.lua",
+   "size": 487
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlQ.lua",
+   "size": 1811
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlShiftBackSlash.lua",
+   "size": 522
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlShiftPgUpDn.lua",
+   "size": 1089
+  },
+  {
+   "path": "Addons/Macros/Panel.CtrlShiftPgUpDn_api.lua",
+   "size": 1181
+  },
+  {
+   "path": "Addons/Macros/Panel.Del.lua",
+   "size": 262
+  },
+  {
+   "path": "Addons/Macros/Panel.Esc.lua",
+   "size": 282
+  },
+  {
+   "path": "Addons/Macros/Panel.EscKeyBar.lua",
+   "size": 344
+  },
+  {
+   "path": "Addons/Macros/Panel.JumpToSelectedFile.lua",
+   "size": 1190
+  },
+  {
+   "path": "Addons/Macros/Panel.Lynx-mot.lua",
+   "size": 327
+  },
+  {
+   "path": "Addons/Macros/Panel.MouseWheelTilt.lua",
+   "size": 287
+  },
+  {
+   "path": "Addons/Macros/Panel.Numpad.lua",
+   "size": 331
+  },
+  {
+   "path": "Addons/Macros/Panel.SelectFromClipboard.lua",
+   "size": 250
+  },
+  {
+   "path": "Addons/Macros/Panel.SpaceToSelect.lua",
+   "size": 219
+  },
+  {
+   "path": "Addons/Macros/Search.CtrlIns.lua",
+   "size": 245
+  },
+  {
+   "path": "Addons/Macros/ShiftBS.lua",
+   "size": 310
+  },
+  {
+   "path": "Addons/Macros/ShiftTab.lua",
+   "size": 303
+  },
+  {
+   "path": "Addons/Macros/SwapHorizontalScrollDirection.lua",
+   "size": 2491
+  },
+  {
+   "path": "Addons/Macros/Symlink.lua",
+   "size": 3005
+  },
+  {
+   "path": "Addons/Macros/UppercaseFolders.lua",
+   "size": 953
+  },
+  {
+   "path": "Addons/Macros/View.CtrlUpDown.lua",
+   "size": 184
+  },
+  {
+   "path": "Addons/Macros/View.NextPrevFile.lua",
+   "size": 181
+  },
+  {
+   "path": "Addons/Macros/View.PgDn.lua",
+   "size": 235
+  },
+  {
+   "path": "Addons/Macros/View.ShiftInsSearch.lua",
+   "size": 190
+  },
+  {
+   "path": "Addons/Macros/View.Space.lua",
+   "size": 310
+  },
+  {
+   "path": "Addons/Macros/View.TypeToSearch.lua",
+   "size": 272
+  },
+  {
+   "path": "Addons/Macros/WheelScreenSwitch.lua",
+   "size": 379
+  },
+  {
+   "path": "Addons/README.TXT",
+   "size": 726
+  },
+  {
+   "path": "Addons/SetUp/Default165.farconfig",
+   "size": 717
+  },
+  {
+   "path": "Addons/SetUp/Descript.ion",
+   "size": 369
+  },
+  {
+   "path": "Addons/SetUp/Executor.4NT.farconfig",
+   "size": 740
+  },
+  {
+   "path": "Addons/SetUp/Executor.CMD.farconfig",
+   "size": 451
+  },
+  {
+   "path": "Addons/SetUp/Executor.TCC.farconfig",
+   "size": 4429
+  },
+  {
+   "path": "Addons/SetUp/Executor.TCCLE.farconfig",
+   "size": 1661
+  },
+  {
+   "path": "Addons/SetUp/KeyBarLabels.farconfig",
+   "size": 3037
+  },
+  {
+   "path": "Addons/SetUp/WindowsGUI.farconfig",
+   "size": 733
+  },
+  {
+   "path": "Addons/SetUp/WindowsGUI.lua",
+   "size": 1453
+  },
+  {
+   "path": "Addons/Shell/Descript.ion",
+   "size": 105
+  },
+  {
+   "path": "Addons/Shell/FARHere.inf",
+   "size": 3572
+  },
+  {
+   "path": "Addons/XLat/Descript.ion",
+   "size": 61
+  },
+  {
+   "path": "Addons/XLat/Russian/AltR.lua",
+   "size": 156
+  },
+  {
+   "path": "Addons/XLat/Russian/Apps.lua",
+   "size": 155
+  },
+  {
+   "path": "Addons/XLat/Russian/CtrlR.lua",
+   "size": 158
+  },
+  {
+   "path": "Addons/XLat/Russian/CtrlShiftX.lua",
+   "size": 169
+  },
+  {
+   "path": "Addons/XLat/Russian/Descript.ion",
+   "size": 322
+  },
+  {
+   "path": "Addons/XLat/Russian/Qwerty.farconfig",
+   "size": 7554
+  },
+  {
+   "path": "Documentation/eng/Bug.Report.txt",
+   "size": 5307
+  },
+  {
+   "path": "Documentation/eng/Far.FAQ.txt",
+   "size": 105
+  },
+  {
+   "path": "Documentation/eng/Plugins.Install.txt",
+   "size": 4998
+  },
+  {
+   "path": "Documentation/eng/Plugins.Review.txt",
+   "size": 2888
+  },
+  {
+   "path": "Documentation/eng/TechInfo.txt",
+   "size": 3992
+  },
+  {
+   "path": "Documentation/pol/Bug.Report.txt",
+   "size": 5569
+  },
+  {
+   "path": "Documentation/pol/Far.FAQ.txt",
+   "size": 131
+  },
+  {
+   "path": "Documentation/pol/Plugins.Install.txt",
+   "size": 5123
+  },
+  {
+   "path": "Documentation/pol/Plugins.Review.txt",
+   "size": 3067
+  },
+  {
+   "path": "Documentation/pol/TechInfo.txt",
+   "size": 4468
+  },
+  {
+   "path": "Documentation/rus/Bug.Report.txt",
+   "size": 9296
+  },
+  {
+   "path": "Documentation/rus/Far.FAQ.txt",
+   "size": 81
+  },
+  {
+   "path": "Documentation/rus/Plugins.Install.txt",
+   "size": 7513
+  },
+  {
+   "path": "Documentation/rus/Plugins.Review.txt",
+   "size": 4938
+  },
+  {
+   "path": "Documentation/rus/TechInfo.txt",
+   "size": 6116
+  },
+  {
+   "path": "Encyclopedia/FarEncyclopedia.ru.chm",
+   "size": 749010
+  },
+  {
+   "path": "Encyclopedia/luafar_manual.chm",
+   "size": 178167
+  },
+  {
+   "path": "Encyclopedia/macroapi_manual.en.chm",
+   "size": 89370
+  },
+  {
+   "path": "Encyclopedia/macroapi_manual.pl.chm",
+   "size": 98570
+  },
+  {
+   "path": "Encyclopedia/macroapi_manual.ru.chm",
+   "size": 97622
+  },
+  {
+   "path": "Far.VisualElementsManifest.xml",
+   "size": 340
+  },
+  {
+   "path": "Far.exe",
+   "size": 5519360
+  },
+  {
+   "path": "Far.exe.example.ini",
+   "size": 1430
+  },
+  {
+   "path": "Far.map",
+   "size": 5141765
+  },
+  {
+   "path": "FarBel.lng",
+   "size": 112345
+  },
+  {
+   "path": "FarCze.hlf",
+   "size": 300754
+  },
+  {
+   "path": "FarCze.lng",
+   "size": 91643
+  },
+  {
+   "path": "FarEng.hlf",
+   "size": 291131
+  },
+  {
+   "path": "FarEng.lng",
+   "size": 86085
+  },
+  {
+   "path": "FarGer.hlf",
+   "size": 299263
+  },
+  {
+   "path": "FarGer.lng",
+   "size": 93980
+  },
+  {
+   "path": "FarHun.hlf",
+   "size": 314866
+  },
+  {
+   "path": "FarHun.lng",
+   "size": 96729
+  },
+  {
+   "path": "FarIta.lng",
+   "size": 90208
+  },
+  {
+   "path": "FarLit.lng",
+   "size": 104300
+  },
+  {
+   "path": "FarPol.hlf",
+   "size": 319280
+  },
+  {
+   "path": "FarPol.lng",
+   "size": 90032
+  },
+  {
+   "path": "FarPor.lng",
+   "size": 106384
+  },
+  {
+   "path": "FarRus.hlf",
+   "size": 483574
+  },
+  {
+   "path": "FarRus.lng",
+   "size": 112743
+  },
+  {
+   "path": "FarSky.hlf",
+   "size": 297118
+  },
+  {
+   "path": "FarSky.lng",
+   "size": 92239
+  },
+  {
+   "path": "FarSpa.lng",
+   "size": 92400
+  },
+  {
+   "path": "FarUkr.hlf",
+   "size": 386350
+  },
+  {
+   "path": "FarUkr.lng",
+   "size": 112290
+  },
+  {
+   "path": "File_id.diz",
+   "size": 535
+  },
+  {
+   "path": "PluginSDK/Headers.c/DlgBuilder.hpp",
+   "size": 30081
+  },
+  {
+   "path": "PluginSDK/Headers.c/farcolor.hpp",
+   "size": 5868
+  },
+  {
+   "path": "PluginSDK/Headers.c/plugin.hpp",
+   "size": 84720
+  },
+  {
+   "path": "PluginSDK/Headers.pas/FarColorW.pas",
+   "size": 9022
+  },
+  {
+   "path": "PluginSDK/Headers.pas/PluginW.pas",
+   "size": 107742
+  },
+  {
+   "path": "Plugins/Align/Align.dll",
+   "size": 129536
+  },
+  {
+   "path": "Plugins/Align/Align.map",
+   "size": 106152
+  },
+  {
+   "path": "Plugins/Align/AlignBel.lng",
+   "size": 333
+  },
+  {
+   "path": "Plugins/Align/AlignCze.lng",
+   "size": 181
+  },
+  {
+   "path": "Plugins/Align/AlignEng.lng",
+   "size": 166
+  },
+  {
+   "path": "Plugins/Align/AlignGer.lng",
+   "size": 179
+  },
+  {
+   "path": "Plugins/Align/AlignHun.lng",
+   "size": 183
+  },
+  {
+   "path": "Plugins/Align/AlignIta.lng",
+   "size": 187
+  },
+  {
+   "path": "Plugins/Align/AlignLit.lng",
+   "size": 206
+  },
+  {
+   "path": "Plugins/Align/AlignPol.lng",
+   "size": 179
+  },
+  {
+   "path": "Plugins/Align/AlignPor.lng",
+   "size": 194
+  },
+  {
+   "path": "Plugins/Align/AlignRus.lng",
+   "size": 324
+  },
+  {
+   "path": "Plugins/Align/AlignSky.lng",
+   "size": 190
+  },
+  {
+   "path": "Plugins/Align/AlignSpa.lng",
+   "size": 192
+  },
+  {
+   "path": "Plugins/Align/AlignUkr.lng",
+   "size": 333
+  },
+  {
+   "path": "Plugins/Align/changelog",
+   "size": 3665
+  },
+  {
+   "path": "Plugins/ArcLite/7z.dll",
+   "size": 1908736
+  },
+  {
+   "path": "Plugins/ArcLite/7z.sfx",
+   "size": 214528
+  },
+  {
+   "path": "Plugins/ArcLite/7zCon.sfx",
+   "size": 193536
+  },
+  {
+   "path": "Plugins/ArcLite/7zS2.sfx",
+   "size": 35328
+  },
+  {
+   "path": "Plugins/ArcLite/7zS2con.sfx",
+   "size": 35328
+  },
+  {
+   "path": "Plugins/ArcLite/7zSD.sfx",
+   "size": 128000
+  },
+  {
+   "path": "Plugins/ArcLite/arclite-extra.farconfig",
+   "size": 1408
+  },
+  {
+   "path": "Plugins/ArcLite/arclite.dll",
+   "size": 992768
+  },
+  {
+   "path": "Plugins/ArcLite/arclite.map",
+   "size": 833882
+  },
+  {
+   "path": "Plugins/ArcLite/arclite.xml",
+   "size": 719
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_bel.lng",
+   "size": 10643
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_eng.hlf",
+   "size": 13559
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_eng.lng",
+   "size": 6073
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_ita.lng",
+   "size": 6449
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_pol.hlf",
+   "size": 15247
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_pol.lng",
+   "size": 6518
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_rus.hlf",
+   "size": 24608
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_rus.lng",
+   "size": 10650
+  },
+  {
+   "path": "Plugins/ArcLite/arclite_spa.lng",
+   "size": 7218
+  },
+  {
+   "path": "Plugins/ArcLite/changelog",
+   "size": 34767
+  },
+  {
+   "path": "Plugins/AutoWrap/AutoWrap.dll",
+   "size": 131072
+  },
+  {
+   "path": "Plugins/AutoWrap/AutoWrap.map",
+   "size": 109074
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapBel.lng",
+   "size": 428
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapCze.lng",
+   "size": 274
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapEng.lng",
+   "size": 234
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapGer.lng",
+   "size": 268
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapHun.lng",
+   "size": 271
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapIta.lng",
+   "size": 248
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapLit.lng",
+   "size": 275
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapPol.lng",
+   "size": 288
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapPor.lng",
+   "size": 262
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapRus.lng",
+   "size": 421
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapSky.lng",
+   "size": 265
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapSpa.lng",
+   "size": 325
+  },
+  {
+   "path": "Plugins/AutoWrap/WrapUkr.lng",
+   "size": 423
+  },
+  {
+   "path": "Plugins/AutoWrap/changelog",
+   "size": 3549
+  },
+  {
+   "path": "Plugins/Brackets/BrackBel.hlf",
+   "size": 8390
+  },
+  {
+   "path": "Plugins/Brackets/BrackBel.lng",
+   "size": 715
+  },
+  {
+   "path": "Plugins/Brackets/BrackCze.hlf",
+   "size": 6535
+  },
+  {
+   "path": "Plugins/Brackets/BrackCze.lng",
+   "size": 439
+  },
+  {
+   "path": "Plugins/Brackets/BrackEng.hlf",
+   "size": 6891
+  },
+  {
+   "path": "Plugins/Brackets/BrackEng.lng",
+   "size": 419
+  },
+  {
+   "path": "Plugins/Brackets/BrackGer.lng",
+   "size": 415
+  },
+  {
+   "path": "Plugins/Brackets/BrackHun.lng",
+   "size": 419
+  },
+  {
+   "path": "Plugins/Brackets/BrackIta.lng",
+   "size": 466
+  },
+  {
+   "path": "Plugins/Brackets/BrackLit.lng",
+   "size": 502
+  },
+  {
+   "path": "Plugins/Brackets/BrackPol.hlf",
+   "size": 6211
+  },
+  {
+   "path": "Plugins/Brackets/BrackPol.lng",
+   "size": 459
+  },
+  {
+   "path": "Plugins/Brackets/BrackPor.lng",
+   "size": 428
+  },
+  {
+   "path": "Plugins/Brackets/BrackRus.hlf",
+   "size": 8426
+  },
+  {
+   "path": "Plugins/Brackets/BrackRus.lng",
+   "size": 735
+  },
+  {
+   "path": "Plugins/Brackets/BrackSky.lng",
+   "size": 453
+  },
+  {
+   "path": "Plugins/Brackets/BrackSpa.lng",
+   "size": 446
+  },
+  {
+   "path": "Plugins/Brackets/BrackUkr.hlf",
+   "size": 8236
+  },
+  {
+   "path": "Plugins/Brackets/BrackUkr.lng",
+   "size": 707
+  },
+  {
+   "path": "Plugins/Brackets/Brackets.dll",
+   "size": 133632
+  },
+  {
+   "path": "Plugins/Brackets/Brackets.lua",
+   "size": 1067
+  },
+  {
+   "path": "Plugins/Brackets/Brackets.map",
+   "size": 110105
+  },
+  {
+   "path": "Plugins/Brackets/changelog",
+   "size": 6647
+  },
+  {
+   "path": "Plugins/Compare/AdvCompare.CompareBufferSize.farconfig",
+   "size": 1218
+  },
+  {
+   "path": "Plugins/Compare/CmpBel.hlf",
+   "size": 3002
+  },
+  {
+   "path": "Plugins/Compare/CmpCze.hlf",
+   "size": 1686
+  },
+  {
+   "path": "Plugins/Compare/CmpEng.hlf",
+   "size": 1574
+  },
+  {
+   "path": "Plugins/Compare/CmpGer.hlf",
+   "size": 1690
+  },
+  {
+   "path": "Plugins/Compare/CmpHun.hlf",
+   "size": 1649
+  },
+  {
+   "path": "Plugins/Compare/CmpPol.hlf",
+   "size": 1887
+  },
+  {
+   "path": "Plugins/Compare/CmpPor.hlf",
+   "size": 1697
+  },
+  {
+   "path": "Plugins/Compare/CmpRus.hlf",
+   "size": 3138
+  },
+  {
+   "path": "Plugins/Compare/CmpSky.hlf",
+   "size": 1681
+  },
+  {
+   "path": "Plugins/Compare/CmpUkr.hlf",
+   "size": 2576
+  },
+  {
+   "path": "Plugins/Compare/CompBel.lng",
+   "size": 1389
+  },
+  {
+   "path": "Plugins/Compare/CompCze.lng",
+   "size": 807
+  },
+  {
+   "path": "Plugins/Compare/CompEng.lng",
+   "size": 731
+  },
+  {
+   "path": "Plugins/Compare/CompGer.lng",
+   "size": 773
+  },
+  {
+   "path": "Plugins/Compare/CompHun.lng",
+   "size": 815
+  },
+  {
+   "path": "Plugins/Compare/CompIta.lng",
+   "size": 767
+  },
+  {
+   "path": "Plugins/Compare/CompLit.lng",
+   "size": 774
+  },
+  {
+   "path": "Plugins/Compare/CompPol.lng",
+   "size": 798
+  },
+  {
+   "path": "Plugins/Compare/CompPor.lng",
+   "size": 781
+  },
+  {
+   "path": "Plugins/Compare/CompRus.lng",
+   "size": 1372
+  },
+  {
+   "path": "Plugins/Compare/CompSky.lng",
+   "size": 802
+  },
+  {
+   "path": "Plugins/Compare/CompSpa.lng",
+   "size": 834
+  },
+  {
+   "path": "Plugins/Compare/CompUkr.lng",
+   "size": 1151
+  },
+  {
+   "path": "Plugins/Compare/Compare.dll",
+   "size": 136704
+  },
+  {
+   "path": "Plugins/Compare/Compare.map",
+   "size": 109617
+  },
+  {
+   "path": "Plugins/Compare/changelog",
+   "size": 6714
+  },
+  {
+   "path": "Plugins/DrawLine/DrawBel.hlf",
+   "size": 913
+  },
+  {
+   "path": "Plugins/DrawLine/DrawBel.lng",
+   "size": 233
+  },
+  {
+   "path": "Plugins/DrawLine/DrawCze.hlf",
+   "size": 596
+  },
+  {
+   "path": "Plugins/DrawLine/DrawCze.lng",
+   "size": 180
+  },
+  {
+   "path": "Plugins/DrawLine/DrawEng.hlf",
+   "size": 522
+  },
+  {
+   "path": "Plugins/DrawLine/DrawEng.lng",
+   "size": 168
+  },
+  {
+   "path": "Plugins/DrawLine/DrawGer.lng",
+   "size": 188
+  },
+  {
+   "path": "Plugins/DrawLine/DrawHun.lng",
+   "size": 194
+  },
+  {
+   "path": "Plugins/DrawLine/DrawIta.lng",
+   "size": 183
+  },
+  {
+   "path": "Plugins/DrawLine/DrawLine.dll",
+   "size": 113152
+  },
+  {
+   "path": "Plugins/DrawLine/DrawLine.map",
+   "size": 94533
+  },
+  {
+   "path": "Plugins/DrawLine/DrawLit.lng",
+   "size": 189
+  },
+  {
+   "path": "Plugins/DrawLine/DrawPol.hlf",
+   "size": 595
+  },
+  {
+   "path": "Plugins/DrawLine/DrawPol.lng",
+   "size": 172
+  },
+  {
+   "path": "Plugins/DrawLine/DrawPor.lng",
+   "size": 188
+  },
+  {
+   "path": "Plugins/DrawLine/DrawRus.hlf",
+   "size": 863
+  },
+  {
+   "path": "Plugins/DrawLine/DrawRus.lng",
+   "size": 218
+  },
+  {
+   "path": "Plugins/DrawLine/DrawSky.lng",
+   "size": 187
+  },
+  {
+   "path": "Plugins/DrawLine/DrawSpa.lng",
+   "size": 182
+  },
+  {
+   "path": "Plugins/DrawLine/DrawUkr.hlf",
+   "size": 863
+  },
+  {
+   "path": "Plugins/DrawLine/DrawUkr.lng",
+   "size": 230
+  },
+  {
+   "path": "Plugins/DrawLine/changelog",
+   "size": 5579
+  },
+  {
+   "path": "Plugins/EMenu/EMenu.dll",
+   "size": 160768
+  },
+  {
+   "path": "Plugins/EMenu/EMenu.map",
+   "size": 125404
+  },
+  {
+   "path": "Plugins/EMenu/EMenuBel.hlf",
+   "size": 10077
+  },
+  {
+   "path": "Plugins/EMenu/EMenuBel.lng",
+   "size": 1310
+  },
+  {
+   "path": "Plugins/EMenu/EMenuCze.hlf",
+   "size": 6089
+  },
+  {
+   "path": "Plugins/EMenu/EMenuCze.lng",
+   "size": 709
+  },
+  {
+   "path": "Plugins/EMenu/EMenuEng.hlf",
+   "size": 5428
+  },
+  {
+   "path": "Plugins/EMenu/EMenuEng.lng",
+   "size": 650
+  },
+  {
+   "path": "Plugins/EMenu/EMenuIta.lng",
+   "size": 683
+  },
+  {
+   "path": "Plugins/EMenu/EMenuPol.hlf",
+   "size": 6231
+  },
+  {
+   "path": "Plugins/EMenu/EMenuPol.lng",
+   "size": 760
+  },
+  {
+   "path": "Plugins/EMenu/EMenuRus.hlf",
+   "size": 10095
+  },
+  {
+   "path": "Plugins/EMenu/EMenuRus.lng",
+   "size": 1192
+  },
+  {
+   "path": "Plugins/EMenu/EMenuSky.lng",
+   "size": 746
+  },
+  {
+   "path": "Plugins/EMenu/EMenuSpa.lng",
+   "size": 753
+  },
+  {
+   "path": "Plugins/EMenu/EMenuUkr.hlf",
+   "size": 10094
+  },
+  {
+   "path": "Plugins/EMenu/EMenuUkr.lng",
+   "size": 1191
+  },
+  {
+   "path": "Plugins/EMenu/Hotkey.farconfig",
+   "size": 672
+  },
+  {
+   "path": "Plugins/EMenu/Hotkey.lua",
+   "size": 1739
+  },
+  {
+   "path": "Plugins/EMenu/HotkeyClipboard.lua",
+   "size": 994
+  },
+  {
+   "path": "Plugins/EMenu/HotkeyProperties.lua",
+   "size": 469
+  },
+  {
+   "path": "Plugins/EMenu/changelog",
+   "size": 15292
+  },
+  {
+   "path": "Plugins/EditCase/ECaseBel.hlf",
+   "size": 1611
+  },
+  {
+   "path": "Plugins/EditCase/ECaseBel.lng",
+   "size": 278
+  },
+  {
+   "path": "Plugins/EditCase/ECaseCze.hlf",
+   "size": 1439
+  },
+  {
+   "path": "Plugins/EditCase/ECaseCze.lng",
+   "size": 183
+  },
+  {
+   "path": "Plugins/EditCase/ECaseEng.hlf",
+   "size": 1419
+  },
+  {
+   "path": "Plugins/EditCase/ECaseEng.lng",
+   "size": 161
+  },
+  {
+   "path": "Plugins/EditCase/ECaseGer.hlf",
+   "size": 1466
+  },
+  {
+   "path": "Plugins/EditCase/ECaseGer.lng",
+   "size": 160
+  },
+  {
+   "path": "Plugins/EditCase/ECaseHun.hlf",
+   "size": 1484
+  },
+  {
+   "path": "Plugins/EditCase/ECaseHun.lng",
+   "size": 159
+  },
+  {
+   "path": "Plugins/EditCase/ECaseIta.lng",
+   "size": 145
+  },
+  {
+   "path": "Plugins/EditCase/ECaseLit.lng",
+   "size": 217
+  },
+  {
+   "path": "Plugins/EditCase/ECasePol.hlf",
+   "size": 1175
+  },
+  {
+   "path": "Plugins/EditCase/ECasePol.lng",
+   "size": 191
+  },
+  {
+   "path": "Plugins/EditCase/ECasePor.hlf",
+   "size": 1417
+  },
+  {
+   "path": "Plugins/EditCase/ECasePor.lng",
+   "size": 189
+  },
+  {
+   "path": "Plugins/EditCase/ECaseRus.hlf",
+   "size": 1619
+  },
+  {
+   "path": "Plugins/EditCase/ECaseRus.lng",
+   "size": 297
+  },
+  {
+   "path": "Plugins/EditCase/ECaseSky.hlf",
+   "size": 1450
+  },
+  {
+   "path": "Plugins/EditCase/ECaseSky.lng",
+   "size": 210
+  },
+  {
+   "path": "Plugins/EditCase/ECaseSpa.lng",
+   "size": 208
+  },
+  {
+   "path": "Plugins/EditCase/ECaseUkr.hlf",
+   "size": 1636
+  },
+  {
+   "path": "Plugins/EditCase/ECaseUkr.lng",
+   "size": 260
+  },
+  {
+   "path": "Plugins/EditCase/EditCase.dll",
+   "size": 122880
+  },
+  {
+   "path": "Plugins/EditCase/EditCase.lua",
+   "size": 1019
+  },
+  {
+   "path": "Plugins/EditCase/EditCase.map",
+   "size": 102165
+  },
+  {
+   "path": "Plugins/EditCase/changelog",
+   "size": 4631
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsBel.hlf",
+   "size": 21832
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsBel.lng",
+   "size": 785
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsCze.hlf",
+   "size": 15759
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsCze.lng",
+   "size": 457
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsEng.hlf",
+   "size": 15272
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsEng.lng",
+   "size": 443
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsIta.lng",
+   "size": 522
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsLit.lng",
+   "size": 461
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsPol.hlf",
+   "size": 15561
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsPol.lng",
+   "size": 511
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsRus.hlf",
+   "size": 22561
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsRus.lng",
+   "size": 823
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsSky.lng",
+   "size": 499
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsSpa.lng",
+   "size": 504
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsUkr.hlf",
+   "size": 22105
+  },
+  {
+   "path": "Plugins/FarCmds/FARCmdsUkr.lng",
+   "size": 858
+  },
+  {
+   "path": "Plugins/FarCmds/FarCmds.dll",
+   "size": 150528
+  },
+  {
+   "path": "Plugins/FarCmds/FarCmds.map",
+   "size": 116233
+  },
+  {
+   "path": "Plugins/FarCmds/changelog",
+   "size": 26611
+  },
+  {
+   "path": "Plugins/FarColorer/LICENSE",
+   "size": 1137
+  },
+  {
+   "path": "Plugins/FarColorer/README.md",
+   "size": 3378
+  },
+  {
+   "path": "Plugins/FarColorer/base/CHANGELOG.md",
+   "size": 6583
+  },
+  {
+   "path": "Plugins/FarColorer/base/auto/empty.hrc",
+   "size": 477
+  },
+  {
+   "path": "Plugins/FarColorer/base/catalog.xml",
+   "size": 781
+  },
+  {
+   "path": "Plugins/FarColorer/base/common.zip",
+   "size": 1609832
+  },
+  {
+   "path": "Plugins/FarColorer/bin/Plugin.Colorer.lua",
+   "size": 3004
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorer.dll",
+   "size": 2093056
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorer.map",
+   "size": 1233079
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorere.hlf",
+   "size": 20744
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorere.lng",
+   "size": 1251
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorerpol.hlf",
+   "size": 17480
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorerpol.lng",
+   "size": 1370
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorerr.hlf",
+   "size": 29289
+  },
+  {
+   "path": "Plugins/FarColorer/bin/colorerr.lng",
+   "size": 2390
+  },
+  {
+   "path": "Plugins/FarColorer/bin/hrcsettings.xml",
+   "size": 1486
+  },
+  {
+   "path": "Plugins/FarColorer/history.ru.txt",
+   "size": 48563
+  },
+  {
+   "path": "Plugins/FileCase/CaseBel.hlf",
+   "size": 2110
+  },
+  {
+   "path": "Plugins/FileCase/CaseBel.lng",
+   "size": 909
+  },
+  {
+   "path": "Plugins/FileCase/CaseCze.hlf",
+   "size": 1192
+  },
+  {
+   "path": "Plugins/FileCase/CaseCze.lng",
+   "size": 472
+  },
+  {
+   "path": "Plugins/FileCase/CaseEng.hlf",
+   "size": 1163
+  },
+  {
+   "path": "Plugins/FileCase/CaseEng.lng",
+   "size": 431
+  },
+  {
+   "path": "Plugins/FileCase/CaseGer.hlf",
+   "size": 1189
+  },
+  {
+   "path": "Plugins/FileCase/CaseGer.lng",
+   "size": 466
+  },
+  {
+   "path": "Plugins/FileCase/CaseHun.hlf",
+   "size": 1235
+  },
+  {
+   "path": "Plugins/FileCase/CaseHun.lng",
+   "size": 447
+  },
+  {
+   "path": "Plugins/FileCase/CaseIta.lng",
+   "size": 479
+  },
+  {
+   "path": "Plugins/FileCase/CaseLit.lng",
+   "size": 471
+  },
+  {
+   "path": "Plugins/FileCase/CasePol.hlf",
+   "size": 1590
+  },
+  {
+   "path": "Plugins/FileCase/CasePol.lng",
+   "size": 521
+  },
+  {
+   "path": "Plugins/FileCase/CasePor.hlf",
+   "size": 1240
+  },
+  {
+   "path": "Plugins/FileCase/CasePor.lng",
+   "size": 508
+  },
+  {
+   "path": "Plugins/FileCase/CaseRus.hlf",
+   "size": 2319
+  },
+  {
+   "path": "Plugins/FileCase/CaseRus.lng",
+   "size": 928
+  },
+  {
+   "path": "Plugins/FileCase/CaseSky.hlf",
+   "size": 1219
+  },
+  {
+   "path": "Plugins/FileCase/CaseSky.lng",
+   "size": 557
+  },
+  {
+   "path": "Plugins/FileCase/CaseSpa.lng",
+   "size": 549
+  },
+  {
+   "path": "Plugins/FileCase/CaseUkr.hlf",
+   "size": 1737
+  },
+  {
+   "path": "Plugins/FileCase/CaseUkr.lng",
+   "size": 847
+  },
+  {
+   "path": "Plugins/FileCase/FileCase.dll",
+   "size": 134144
+  },
+  {
+   "path": "Plugins/FileCase/FileCase.map",
+   "size": 110641
+  },
+  {
+   "path": "Plugins/FileCase/changelog",
+   "size": 4231
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewer.dll",
+   "size": 135680
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewer.map",
+   "size": 111542
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerBel.hlf",
+   "size": 5896
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerBel.lng",
+   "size": 734
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerCze.hlf",
+   "size": 5104
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerCze.lng",
+   "size": 433
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerEng.hlf",
+   "size": 5086
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerEng.lng",
+   "size": 364
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerIta.lng",
+   "size": 418
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerLit.lng",
+   "size": 394
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerPol.hlf",
+   "size": 4269
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerPol.lng",
+   "size": 420
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerRus.hlf",
+   "size": 6068
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerRus.lng",
+   "size": 689
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerSky.lng",
+   "size": 456
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerSpa.lng",
+   "size": 430
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerUkr.hlf",
+   "size": 6027
+  },
+  {
+   "path": "Plugins/HlfViewer/HlfViewerUkr.lng",
+   "size": 649
+  },
+  {
+   "path": "Plugins/HlfViewer/changelog",
+   "size": 6963
+  },
+  {
+   "path": "Plugins/LuaMacro/LuaMacro.dll",
+   "size": 116224
+  },
+  {
+   "path": "Plugins/LuaMacro/LuaMacro.map",
+   "size": 97256
+  },
+  {
+   "path": "Plugins/LuaMacro/_globalinfo.lua",
+   "size": 333
+  },
+  {
+   "path": "Plugins/LuaMacro/api.lua",
+   "size": 27365
+  },
+  {
+   "path": "Plugins/LuaMacro/changelog",
+   "size": 182359
+  },
+  {
+   "path": "Plugins/LuaMacro/farapi.lua",
+   "size": 77610
+  },
+  {
+   "path": "Plugins/LuaMacro/keymacro.lua",
+   "size": 17767
+  },
+  {
+   "path": "Plugins/LuaMacro/lang.lua",
+   "size": 1160
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_bel.lng",
+   "size": 2149
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_eng.lng",
+   "size": 1170
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_ita.lng",
+   "size": 1179
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_pol.lng",
+   "size": 1291
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_rus.lng",
+   "size": 2147
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_sky.lng",
+   "size": 1241
+  },
+  {
+   "path": "Plugins/LuaMacro/lm_spa.lng",
+   "size": 1357
+  },
+  {
+   "path": "Plugins/LuaMacro/luamacro.example.ini",
+   "size": 290
+  },
+  {
+   "path": "Plugins/LuaMacro/luamacro.lua",
+   "size": 22215
+  },
+  {
+   "path": "Plugins/LuaMacro/macrotest.lua",
+   "size": 90700
+  },
+  {
+   "path": "Plugins/LuaMacro/mbrowser.lua",
+   "size": 20875
+  },
+  {
+   "path": "Plugins/LuaMacro/moonscript.lua",
+   "size": 166693
+  },
+  {
+   "path": "Plugins/LuaMacro/panelsort.lua",
+   "size": 11758
+  },
+  {
+   "path": "Plugins/LuaMacro/utils.lua",
+   "size": 42877
+  },
+  {
+   "path": "Plugins/LuaMacro/winapi.lua",
+   "size": 8713
+  },
+  {
+   "path": "Plugins/NetBox/ChangeLog",
+   "size": 14561
+  },
+  {
+   "path": "Plugins/NetBox/LICENSE.txt",
+   "size": 18431
+  },
+  {
+   "path": "Plugins/NetBox/NetBox.dll",
+   "size": 6884352
+  },
+  {
+   "path": "Plugins/NetBox/NetBox.en.hlf",
+   "size": 17108
+  },
+  {
+   "path": "Plugins/NetBox/NetBox.map",
+   "size": 3862957
+  },
+  {
+   "path": "Plugins/NetBox/NetBox.ru.hlf",
+   "size": 29188
+  },
+  {
+   "path": "Plugins/NetBox/NetBoxEng.lng",
+   "size": 46600
+  },
+  {
+   "path": "Plugins/NetBox/NetBoxFr.lng",
+   "size": 47248
+  },
+  {
+   "path": "Plugins/NetBox/NetBoxPol.lng",
+   "size": 50373
+  },
+  {
+   "path": "Plugins/NetBox/NetBoxRus.lng",
+   "size": 59815
+  },
+  {
+   "path": "Plugins/NetBox/NetBoxSpa.lng",
+   "size": 48772
+  },
+  {
+   "path": "Plugins/NetBox/README.md",
+   "size": 1892
+  },
+  {
+   "path": "Plugins/Network/NetBel.hlf",
+   "size": 5580
+  },
+  {
+   "path": "Plugins/Network/NetBel.lng",
+   "size": 2742
+  },
+  {
+   "path": "Plugins/Network/NetCze.hlf",
+   "size": 3582
+  },
+  {
+   "path": "Plugins/Network/NetCze.lng",
+   "size": 1495
+  },
+  {
+   "path": "Plugins/Network/NetEng.hlf",
+   "size": 3330
+  },
+  {
+   "path": "Plugins/Network/NetEng.lng",
+   "size": 1390
+  },
+  {
+   "path": "Plugins/Network/NetGer.hlf",
+   "size": 3263
+  },
+  {
+   "path": "Plugins/Network/NetGer.lng",
+   "size": 1499
+  },
+  {
+   "path": "Plugins/Network/NetHun.hlf",
+   "size": 3406
+  },
+  {
+   "path": "Plugins/Network/NetHun.lng",
+   "size": 1452
+  },
+  {
+   "path": "Plugins/Network/NetIta.lng",
+   "size": 1480
+  },
+  {
+   "path": "Plugins/Network/NetLit.lng",
+   "size": 1443
+  },
+  {
+   "path": "Plugins/Network/NetPol.hlf",
+   "size": 3499
+  },
+  {
+   "path": "Plugins/Network/NetPol.lng",
+   "size": 1479
+  },
+  {
+   "path": "Plugins/Network/NetPor.hlf",
+   "size": 3399
+  },
+  {
+   "path": "Plugins/Network/NetPor.lng",
+   "size": 1485
+  },
+  {
+   "path": "Plugins/Network/NetRus.hlf",
+   "size": 6097
+  },
+  {
+   "path": "Plugins/Network/NetRus.lng",
+   "size": 2621
+  },
+  {
+   "path": "Plugins/Network/NetSky.hlf",
+   "size": 3389
+  },
+  {
+   "path": "Plugins/Network/NetSky.lng",
+   "size": 1492
+  },
+  {
+   "path": "Plugins/Network/NetSpa.lng",
+   "size": 1568
+  },
+  {
+   "path": "Plugins/Network/NetUkr.hlf",
+   "size": 5330
+  },
+  {
+   "path": "Plugins/Network/NetUkr.lng",
+   "size": 2297
+  },
+  {
+   "path": "Plugins/Network/Network.dll",
+   "size": 204288
+  },
+  {
+   "path": "Plugins/Network/Network.map",
+   "size": 156135
+  },
+  {
+   "path": "Plugins/Network/changelog",
+   "size": 12151
+  },
+  {
+   "path": "Plugins/ProcList/ProcBel.hlf",
+   "size": 29263
+  },
+  {
+   "path": "Plugins/ProcList/ProcBel.lng",
+   "size": 4798
+  },
+  {
+   "path": "Plugins/ProcList/ProcCze.hlf",
+   "size": 15184
+  },
+  {
+   "path": "Plugins/ProcList/ProcCze.lng",
+   "size": 2892
+  },
+  {
+   "path": "Plugins/ProcList/ProcEng.hlf",
+   "size": 14553
+  },
+  {
+   "path": "Plugins/ProcList/ProcEng.lng",
+   "size": 2682
+  },
+  {
+   "path": "Plugins/ProcList/ProcGer.hlf",
+   "size": 14650
+  },
+  {
+   "path": "Plugins/ProcList/ProcGer.lng",
+   "size": 2710
+  },
+  {
+   "path": "Plugins/ProcList/ProcHun.hlf",
+   "size": 14663
+  },
+  {
+   "path": "Plugins/ProcList/ProcHun.lng",
+   "size": 2765
+  },
+  {
+   "path": "Plugins/ProcList/ProcIta.lng",
+   "size": 2850
+  },
+  {
+   "path": "Plugins/ProcList/ProcList.dll",
+   "size": 424960
+  },
+  {
+   "path": "Plugins/ProcList/ProcList.map",
+   "size": 376605
+  },
+  {
+   "path": "Plugins/ProcList/ProcLit.lng",
+   "size": 2777
+  },
+  {
+   "path": "Plugins/ProcList/ProcPol.hlf",
+   "size": 14786
+  },
+  {
+   "path": "Plugins/ProcList/ProcPol.lng",
+   "size": 2949
+  },
+  {
+   "path": "Plugins/ProcList/ProcPor.hlf",
+   "size": 14619
+  },
+  {
+   "path": "Plugins/ProcList/ProcPor.lng",
+   "size": 2760
+  },
+  {
+   "path": "Plugins/ProcList/ProcRus.hlf",
+   "size": 29950
+  },
+  {
+   "path": "Plugins/ProcList/ProcRus.lng",
+   "size": 4649
+  },
+  {
+   "path": "Plugins/ProcList/ProcSky.hlf",
+   "size": 14672
+  },
+  {
+   "path": "Plugins/ProcList/ProcSky.lng",
+   "size": 2710
+  },
+  {
+   "path": "Plugins/ProcList/ProcSpa.lng",
+   "size": 2933
+  },
+  {
+   "path": "Plugins/ProcList/ProcUkr.hlf",
+   "size": 29789
+  },
+  {
+   "path": "Plugins/ProcList/ProcUkr.lng",
+   "size": 4688
+  },
+  {
+   "path": "Plugins/ProcList/changelog",
+   "size": 19048
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolder.dll",
+   "size": 125952
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolder.map",
+   "size": 105584
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderBel.hlf",
+   "size": 1214
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderBel.lng",
+   "size": 323
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderCze.hlf",
+   "size": 1054
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderCze.lng",
+   "size": 210
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderEng.hlf",
+   "size": 966
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderEng.lng",
+   "size": 184
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderIta.lng",
+   "size": 171
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderLit.lng",
+   "size": 222
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderPol.hlf",
+   "size": 995
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderPol.lng",
+   "size": 195
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderRus.hlf",
+   "size": 1589
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderRus.lng",
+   "size": 314
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderSky.lng",
+   "size": 231
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderSpa.lng",
+   "size": 225
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderUkr.hlf",
+   "size": 1375
+  },
+  {
+   "path": "Plugins/SameFolder/SameFolderUkr.lng",
+   "size": 341
+  },
+  {
+   "path": "Plugins/SameFolder/changelog",
+   "size": 146
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpBel.hlf",
+   "size": 15169
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpBel.lng",
+   "size": 1352
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpCze.hlf",
+   "size": 10211
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpCze.lng",
+   "size": 899
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpEng.hlf",
+   "size": 9467
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpEng.lng",
+   "size": 755
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpGer.hlf",
+   "size": 9702
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpGer.lng",
+   "size": 814
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpHun.hlf",
+   "size": 9546
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpHun.lng",
+   "size": 784
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpIta.lng",
+   "size": 856
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpLit.lng",
+   "size": 803
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPanel.ListUTF8.farconfig",
+   "size": 520
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPanel.dll",
+   "size": 222720
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPanel.map",
+   "size": 195880
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPol.hlf",
+   "size": 10129
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPol.lng",
+   "size": 862
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPor.hlf",
+   "size": 9600
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpPor.lng",
+   "size": 790
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpRus.hlf",
+   "size": 15658
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpRus.lng",
+   "size": 1408
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpSky.hlf",
+   "size": 9374
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpSky.lng",
+   "size": 894
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpSpa.lng",
+   "size": 924
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpUkr.hlf",
+   "size": 15470
+  },
+  {
+   "path": "Plugins/TmpPanel/TmpUkr.lng",
+   "size": 1389
+  },
+  {
+   "path": "Plugins/TmpPanel/changelog",
+   "size": 17995
+  },
+  {
+   "path": "Plugins/TmpPanel/disks.bel.temp",
+   "size": 266
+  },
+  {
+   "path": "Plugins/TmpPanel/disks.eng.temp",
+   "size": 202
+  },
+  {
+   "path": "Plugins/TmpPanel/disks.pol.temp",
+   "size": 209
+  },
+  {
+   "path": "Plugins/TmpPanel/disks.rus.temp",
+   "size": 234
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.bel.lua",
+   "size": 162
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.bel.temp",
+   "size": 399
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.eng.lua",
+   "size": 162
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.eng.temp",
+   "size": 308
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.pol.lua",
+   "size": 162
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.pol.temp",
+   "size": 331
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.rus.lua",
+   "size": 162
+  },
+  {
+   "path": "Plugins/TmpPanel/shortcuts.rus.temp",
+   "size": 432
+  },
+  {
+   "path": "RestoreOldPluginSettings.cmd",
+   "size": 828
+  },
+  {
+   "path": "SaveOldPluginSettings.cmd",
+   "size": 790
+  },
+  {
+   "path": "VisualElements/large.png",
+   "size": 2221
+  },
+  {
+   "path": "VisualElements/small.png",
+   "size": 856
+  },
+  {
+   "path": "changelog",
+   "size": 2993761
+  },
+  {
+   "path": "lua51.dll",
+   "size": 502499
+  },
+  {
+   "path": "luafar3.dll",
+   "size": 705536
+  },
+  {
+   "path": "luafar3.map",
+   "size": 290256
+  },
+  {
+   "path": "sqlite3.dll",
+   "size": 1203712
+  },
+  {
+   "path": "sqlite3.map",
+   "size": 330757
+  }
+ ]
+}
