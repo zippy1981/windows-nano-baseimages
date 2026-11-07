@@ -1,0 +1,295 @@
+# Builds a libarchive release for 64-bit Windows with MXE, tests it on Windows, and publishes it.
+#
+# Run by hand (or by watch-upstream.yml) with a version X.Y.Z. On the default branch that publishes:
+#   vX.Y.Z        libarchive-X.Y.Z-windows-x64-static.zip and libarchive-X.Y.Z-windows-x64-shared.zip
+#   static-X.Y.Z  libarchive-X.Y.Z-windows-x64-static-tools.zip
+# Existing releases get their assets replaced, never duplicated.
+#
+# A push that changes the build (the build and test scripts, the keys or this workflow) runs a test build
+# of TEST_VERSION with the same build and tests, and publishes nothing.
+#
+# This workflow never builds MXE. It pulls ghcr.io/<owner>/mxe-libarchive:latest, which mxe-image.yml
+# rebuilds weekly and when mxe/ changes on the default branch. A manual run can pin the image with
+# mxe_image_commit, the commit of this repo whose mxe-image.yml run built it (tag sha-<commit>).
+name: Build libarchive
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Build libarchive {0}', inputs.version)
+      || format('Test build of libarchive ({0})', github.ref_name) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The upstream libarchive release to build, X.Y.Z (no leading v).
+        required: true
+        type: string
+      mxe_image_commit:
+        description: >-
+          Optional. Build with the MXE image made from this commit of this repo (sha-<commit>) instead of
+          :latest. Any commit name git resolves here: a SHA, short SHA, branch or tag.
+        required: false
+        type: string
+        default: ''
+  push:
+    paths:
+      - keys/**
+      - scripts/build-libarchive.sh
+      - scripts/mxe-image-tag.sh
+      - scripts/Test-LibarchivePackage.ps1
+      - .github/workflows/build-libarchive.yml
+
+permissions: {}
+
+env:
+  # The version test builds on push use.
+  TEST_VERSION: 3.8.11
+
+concurrency:
+  group: >-
+    build-libarchive-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
+  cancel-in-progress: false
+
+# bash -eo pipefail, so a failure inside a pipeline fails the step.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      publish: ${{ steps.check.outputs.publish }}
+      image: ${{ steps.image.outputs.image }}
+    permissions:
+      contents: read
+    steps:
+      # Full history, so mxe_image_commit can be a short SHA, a branch or a tag.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: ${{ inputs.mxe_image_commit != '' && '0' || '1' }}
+
+      - name: Validate the version
+        id: check
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          version=${INPUT_VERSION:-${TEST_VERSION}}
+          if [[ ! ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version must be X.Y.Z with no leading v, got '${version}'"
+            exit 1
+          fi
+          publish=false
+          if [[ ${EVENT} == workflow_dispatch && ${REF} == "${DEFAULT_REF}" ]]; then
+            publish=true
+          elif [[ ${EVENT} == workflow_dispatch ]]; then
+            echo "::notice::${REF} is not the default branch, so nothing will be published."
+          fi
+          echo "version=${version}" >>"${GITHUB_OUTPUT}"
+          echo "publish=${publish}" >>"${GITHUB_OUTPUT}"
+          echo "libarchive ${version}; publish: ${publish}" >>"${GITHUB_STEP_SUMMARY}"
+
+      - name: Choose the MXE image
+        id: image
+        env:
+          PIN: ${{ inputs.mxe_image_commit }}
+        run: |
+          image=$(scripts/mxe-image-tag.sh "${PIN}")
+          echo "image=${image}" >>"${GITHUB_OUTPUT}"
+          echo "MXE image: ${image}${PIN:+ (pinned by mxe_image_commit=${PIN})}" >>"${GITHUB_STEP_SUMMARY}"
+
+  build:
+    needs: [version]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      IMAGE: ${{ needs.version.outputs.image }}
+    outputs:
+      image_digest: ${{ steps.pull.outputs.digest }}
+      image_revision: ${{ steps.pull.outputs.revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Records the digest and the commit the image was built from, since :latest moves.
+      - name: Pull the MXE image
+        id: pull
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "${GHCR_TOKEN}" | docker login ghcr.io --username "${ACTOR}" --password-stdin
+          if ! docker pull --quiet "${IMAGE}"; then
+            echo "::error::Could not pull ${IMAGE}. Run the 'MXE image' workflow (mxe-image.yml) to build it: on the default branch for :latest, or on the commit you pinned with mxe_image_commit."
+            exit 1
+          fi
+          docker logout ghcr.io
+          digest=$(docker image inspect --format '{{index .RepoDigests 0}}' "${IMAGE}")
+          revision=$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "${IMAGE}")
+          echo "digest=${digest}" >>"${GITHUB_OUTPUT}"
+          echo "revision=${revision}" >>"${GITHUB_OUTPUT}"
+          echo "MXE image ${IMAGE}: ${digest}, built from ${revision:-an unknown commit}" >>"${GITHUB_STEP_SUMMARY}"
+
+      - name: Build libarchive ${{ env.VERSION }}
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --volume "${GITHUB_WORKSPACE}:/src" --workdir /src \
+            "${IMAGE}" scripts/build-libarchive.sh "${VERSION}" out
+          {
+            echo '```text'
+            cat "out/work/packages/libarchive-${VERSION}-windows-x64-static/MANIFEST.txt"
+            echo '```'
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+      - name: Check the package names
+        run: |
+          for f in "libarchive-${VERSION}-windows-x64-static.zip" "libarchive-${VERSION}-windows-x64-shared.zip" \
+                   "libarchive-${VERSION}-windows-x64-static-tools.zip" "libarchive-${VERSION}-windows-x64-manifest.json"; do
+            test -s "out/${f}" || { echo "::error::out/${f} is missing"; exit 1; }
+          done
+          (cd out && sha256sum --check SHA256SUMS)
+          for z in out/*.zip; do echo "== ${z}"; unzip -l "${z}" | tail -n 1; done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: libarchive-${{ env.VERSION }}
+          path: |
+            out/*.zip
+            out/*.json
+            out/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the build logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: libarchive-${{ env.VERSION }}-logs
+          path: out/work/*.log
+          if-no-files-found: ignore
+
+  smoke-test:
+    needs: [version, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+        package: [static-tools, static, shared]
+        include:
+          - os: windows-2022
+            nano: mcr.microsoft.com/windows/nanoserver:ltsc2022
+          - os: windows-2025
+            nano: mcr.microsoft.com/windows/nanoserver:ltsc2025
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: libarchive-${{ env.VERSION }}
+          path: out
+
+      - name: Test the ${{ matrix.package }} package
+        shell: pwsh
+        env:
+          PACKAGE: ${{ matrix.package }}
+          NANO: ${{ matrix.nano }}
+        run: |
+          $zip = "out/libarchive-${env:VERSION}-windows-x64-${env:PACKAGE}.zip"
+          $nanoArgs = @{}
+          if (Get-Command docker -ErrorAction SilentlyContinue) {
+            docker pull --quiet $env:NANO
+            if ($LASTEXITCODE -eq 0) { $nanoArgs.NanoServerImage = $env:NANO }
+          }
+          if (-not $nanoArgs.Count) { Write-Output "::warning::Docker or $env:NANO is not available; skipping the Nano Server check." }
+          ./scripts/Test-LibarchivePackage.ps1 -PackagePath $zip -ExpectedVersion $env:VERSION -WorkDirectory $env:RUNNER_TEMP @nanoArgs
+
+  release:
+    needs: [version, build, smoke-test]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TARGET: ${{ github.sha }}
+      IMAGE_DIGEST: ${{ needs.build.outputs.image_digest }}
+      IMAGE_REVISION: ${{ needs.build.outputs.image_revision }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: libarchive-${{ env.VERSION }}
+          path: out
+
+      - name: Write the release notes
+        run: |
+          m="out/libarchive-${VERSION}-windows-x64-manifest.json"
+          jq -e --arg v "${VERSION}" '.libarchive_version == $v' "${m}" >/dev/null \
+            || { echo "::error::the manifest is for $(jq -r .libarchive_version "${m}"), not ${VERSION}"; exit 1; }
+          deps=$(jq -r '.dependencies | to_entries | sort_by(.key) | map("\(.key) \(.value)") | join(", ")' "${m}")
+          common=$(cat <<EOF
+          libarchive ${VERSION} ($(jq -r .source.url "${m}"), SHA-256 $(jq -r .source.sha256 "${m}"), signed by $(jq -r '.source.signed_by // "unverified"' "${m}")), cross-compiled for 64-bit Windows with MXE $(jq -r .toolchain.mxe_commit "${m}") and GCC $(jq -r .toolchain.gcc "${m}").
+
+          Built with: ${deps}.
+
+          Build image: ${IMAGE_DIGEST}${IMAGE_REVISION:+, made from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${IMAGE_REVISION}}.
+
+          Each zip has a manifest.json and MANIFEST.txt with the full feature list and CMake configuration, and a licenses/ folder. libiconv (LGPL-2.1) is linked in; its source is in sources/.
+
+          Built from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${TARGET} by ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}.
+          EOF
+          )
+          sums=$(cd out && grep -E "windows-x64-(static|shared)\.zip$" SHA256SUMS)
+          tools_sum=$(cd out && grep -E "windows-x64-static-tools\.zip$" SHA256SUMS)
+          # shellcheck disable=SC2016 # literal Markdown fences
+          printf '%s\n\nThe command-line tools alone are in the static-%s release.\n\n```text\n%s\n```\n' \
+            "${common}" "${VERSION}" "${sums}" >notes-full.md
+          # shellcheck disable=SC2016 # literal Markdown fences
+          printf 'The static command-line tools (%s) from libarchive %s, with their licences. The full packages are in the v%s release.\n\n%s\n\n```text\n%s\n```\n' \
+            "$(jq -r '.tools | join(", ")' "${m}")" "${VERSION}" "${VERSION}" "${common}" "${tools_sum}" >notes-static.md
+
+      - name: Publish v${{ env.VERSION }} and static-${{ env.VERSION }}
+        run: |
+          publish() {
+            local tag=$1 title=$2 notes=$3
+            shift 3
+            local f
+            for f in "$@"; do
+              [[ $(basename "${f}") == libarchive-"${VERSION}"-* ]] || { echo "::error::${f} is not for ${VERSION}"; exit 1; }
+              test -s "${f}" || { echo "::error::${f} is missing"; exit 1; }
+            done
+            if gh release view "${tag}" >/dev/null 2>&1; then
+              echo "Updating the existing release ${tag}"
+              gh release upload "${tag}" "$@" --clobber
+              gh release edit "${tag}" --title "${title}" --notes-file "${notes}"
+            else
+              echo "Creating the release ${tag}"
+              gh release create "${tag}" "$@" --target "${TARGET}" --title "${title}" --notes-file "${notes}"
+            fi
+            gh release view "${tag}" --json url,assets --jq '"\(.url)\n" + ([.assets[].name] | join("\n"))' | tee -a "${GITHUB_STEP_SUMMARY}"
+          }
+          publish "v${VERSION}" "libarchive ${VERSION} for Windows x64" notes-full.md \
+            "out/libarchive-${VERSION}-windows-x64-static.zip" "out/libarchive-${VERSION}-windows-x64-shared.zip"
+          publish "static-${VERSION}" "libarchive ${VERSION} static tools for Windows x64" notes-static.md \
+            "out/libarchive-${VERSION}-windows-x64-static-tools.zip"

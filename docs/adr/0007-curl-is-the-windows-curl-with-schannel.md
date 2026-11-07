@@ -1,9 +1,9 @@
-# 0003. curl is the Windows curl with Schannel
+# 0007. curl is the Windows curl with Schannel
 
 - Status: Accepted
 - Date: 2026-11-06
-- Deciders: @zippy1981
-- Related: [#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5), [#6](https://github.com/zippy1981/windows-nano-baseimages/issues/6), [0002](0002-tools-take-precedence-over-system32-through-the-machine-path.md)
+- Deciders: zippy1981
+- Related: [#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5), [#6](https://github.com/zippy1981/windows-nano-baseimages/issues/6), [0006](0006-tools-take-precedence-over-system32-through-the-machine-path.md)
 
 ## Context
 

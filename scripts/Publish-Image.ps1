@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Labels the tested nanoserver-base images and pushes them to Docker Hub with the tags from ADR 0004.
+Labels the tested nanoserver-base images and pushes them to Docker Hub with the tags from ADR 0008.
 
 .DESCRIPTION
 Adds the OCI labels in a one-line build on top of each tested image, so the pushed layers are exactly the tested

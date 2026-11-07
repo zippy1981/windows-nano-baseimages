@@ -1,7 +1,7 @@
 # nanoserver-base: Nano Server with a modern tar (libarchive bsdtar 3.8), jq and Microsoft Edit on PATH.
 #
 # The tools are in C:\tools\bin, which comes first on the machine PATH, so tar finds this repo's bsdtar instead of
-# the old C:\Windows\System32\tar.exe (docs/adr/0002). The System32 files are left as they are. curl is Windows'
+# the old C:\Windows\System32\tar.exe (docs/adr/0006). The System32 files are left as they are. curl is Windows'
 # own C:\Windows\System32\curl.exe: it uses Schannel and the Windows certificate store, which curl.se's LibreSSL
 # build can't do on Nano Server (issue 5).
 #
@@ -78,7 +78,7 @@ FROM ${BASE_IMAGE}
 
 COPY --from=download C:/tools C:/tools
 
-# Put C:\tools\bin first on the machine PATH (docs/adr/0002). The value comes from the registry, not %PATH%, so no
+# Put C:\tools\bin first on the machine PATH (docs/adr/0006). The value comes from the registry, not %PATH%, so no
 # user PATH is folded into it, and %SystemRoot% stays unexpanded. Downstream images can still use setx PATH for their
 # own (user) entries, which Windows appends after the machine PATH.
 USER ContainerAdministrator

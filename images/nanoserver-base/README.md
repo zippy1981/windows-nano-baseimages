@@ -14,14 +14,14 @@ RUN curl -fsSL -o go.zip https://go.dev/dl/go1.27.3.windows-amd64.zip && tar -xf
 | `tar` (bsdtar), `bsdcpio`, `bsdcat`, `bsdunzip` | libarchive 3.8.11 | This repo's [`static-3.8.11`](https://github.com/zippy1981/windows-nano-baseimages/releases/tag/static-3.8.11) release | BSD-2-Clause. Statically links zlib, xz, bzip2, lz4, zstd, libxml2, OpenSSL and LGPL-2.1 libiconv, whose source tarball is in `C:\tools\licenses\libarchive\sources`. |
 | `jq` | 1.8.2 | [jqlang/jq](https://github.com/jqlang/jq/releases) | MIT |
 | `edit` | 2.0.0 | [microsoft/edit](https://github.com/microsoft/edit/releases) | MIT |
-| `curl` | Windows' own | `C:\Windows\System32\curl.exe`, which uses Schannel and the Windows certificate store ([ADR 0003](../../docs/adr/0003-curl-is-the-windows-curl-with-schannel.md)) | Shipped with Windows |
+| `curl` | Windows' own | `C:\Windows\System32\curl.exe`, which uses Schannel and the Windows certificate store ([ADR 0007](../../docs/adr/0007-curl-is-the-windows-curl-with-schannel.md)) | Shipped with Windows |
 | `pwsh` (`-pwsh` tags only) | 7.6.9 | [PowerShell/PowerShell](https://github.com/PowerShell/PowerShell/releases) | MIT, in `C:\Program Files\PowerShell\7` |
 
 The image adds about 35 MB to Nano Server (300 MB for ltsc2019, 338 MB for ltsc2022, 522 MB for ltsc2025). The `-pwsh` tags add about 260 MB more.
 
 The SHA-256 of every download is pinned in the [Dockerfile](Dockerfile) and checked during the build. A daily workflow opens a bump pull request for a new release.
 
-The tools are in `C:\tools\bin`, which comes first on the machine `PATH`. `C:\Windows\System32\tar.exe` is still there, so call plain `tar`, not its full path ([ADR 0002](../../docs/adr/0002-tools-take-precedence-over-system32-through-the-machine-path.md)). To add your own tools, use `setx PATH` (the user `PATH`, after the machine `PATH`).
+The tools are in `C:\tools\bin`, which comes first on the machine `PATH`. `C:\Windows\System32\tar.exe` is still there, so call plain `tar`, not its full path ([ADR 0006](../../docs/adr/0006-tools-take-precedence-over-system32-through-the-machine-path.md)). To add your own tools, use `setx PATH` (the user `PATH`, after the machine `PATH`).
 
 ## Known limitations
 

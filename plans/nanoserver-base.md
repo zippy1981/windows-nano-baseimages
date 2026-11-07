@@ -14,9 +14,9 @@
 
 Recorded in #5's comments and in the ADRs.
 
-- The tools go in `C:\tools\bin`, first on the machine `PATH`, and the System32 files are left alone ([ADR 0002](../docs/adr/0002-tools-take-precedence-over-system32-through-the-machine-path.md)).
-- curl is System32's (Schannel). curl.se's LibreSSL build can't verify HTTPS on Nano Server ([ADR 0003](../docs/adr/0003-curl-is-the-windows-curl-with-schannel.md)).
-- The images build on the self-hosted runners, with bases pinned by the digest pulled. They publish from `main` with ltsc tags ([ADR 0004](../docs/adr/0004-images-build-on-self-hosted-runners-and-publish-from-main.md)).
+- The tools go in `C:\tools\bin`, first on the machine `PATH`, and the System32 files are left alone ([ADR 0006](../docs/adr/0006-tools-take-precedence-over-system32-through-the-machine-path.md)).
+- curl is System32's (Schannel). curl.se's LibreSSL build can't verify HTTPS on Nano Server ([ADR 0007](../docs/adr/0007-curl-is-the-windows-curl-with-schannel.md)).
+- The images build on the self-hosted runners, with bases pinned by the digest pulled. They publish from `main` with ltsc tags ([ADR 0008](../docs/adr/0008-images-build-on-self-hosted-runners-and-publish-from-main.md)).
 - PowerShell 7 is a second image `FROM` the base, tagged `-pwsh`.
 - Known libarchive gaps are strict expected failures in `tests/archives.json`: Deflate64 (#7), and zips read from a pipe (#8).
 - A daily watcher opens bump pull requests and starts their checks with `workflow_dispatch`, because pull requests opened with `GITHUB_TOKEN` start no workflows.
@@ -31,7 +31,7 @@ Recorded in #5's comments and in the ADRs.
 
 ### Phase 2: CI, publishing and bumps
 
-- [x] **workflow-author**: `.github/workflows/nanoserver-base.yml`, `watch-tool-versions.yml` and `actionlint.yml`. Accept: actionlint is green in CI.
+- [x] **workflow-author**: `.github/workflows/nanoserver-base.yml`, and `watch-tool-versions.yml`. Accept: the actionlint job in `lint-scripts.yml` is green.
 - [ ] **ci-watcher**: the `nanoserver-base` run on the pull request is green on all three versions. Accept: three green legs.
 - [ ] **windows-image-publisher**: the first publish from `main`. Accept: all six moving tags exist on Docker Hub. Needs the owner to create the `Docker Hub zippy1981` environment and its secrets first.
 - [ ] **release-engineer**: run the watcher with `dry-run`. Accept: it reports every tool current.
@@ -54,7 +54,7 @@ Recorded in #5's comments and in the ADRs.
 | --- | --- |
 | container-author | Dockerfiles, `build.cmd` |
 | powershell-author | Build helper, test module, smoke tests, publish and watcher scripts |
-| workflow-author | The three workflows |
+| workflow-author | The two workflows |
 | windows-container-tester | Smoke tests on all three versions |
 | windows-image-publisher | The first Docker Hub publish |
-| adr | ADRs 0001–0004 |
+| adr | ADRs 0006–0008 |

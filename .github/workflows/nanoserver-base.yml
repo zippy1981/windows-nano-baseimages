@@ -1,5 +1,5 @@
 # Builds and tests zippy1981/nanoserver-base and its -pwsh variant for ltsc2019, ltsc2022 and ltsc2025 on this
-# repo's self-hosted runners, and publishes them to Docker Hub from main (ADR 0004).
+# repo's self-hosted runners, and publishes them to Docker Hub from main (ADR 0008).
 # A weekly run rebuilds when Microsoft has published a new Nano Server base, and skips versions that are current.
 name: nanoserver-base
 
@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   build-and-test:
-    # The runners have the host's Docker engine, so never run code from forks on them (ADR 0004)
+    # The runners have the host's Docker engine, so never run code from forks on them (ADR 0008)
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, windows, nanoserver, docker]
     # The first run on a runner downloads about a gigabyte of test archives; later runs use the runner's cache
@@ -119,7 +119,7 @@ jobs:
         run: docker image ls nanoserver-base --format '{{.Repository}}:{{.Tag}} {{.Size}}' | Where-Object { $_ -like "*${{ github.sha }}*" }
 
       - name: Publish to Docker Hub
-        # Only the images that were just tested, only from main (ADR 0004)
+        # Only the images that were just tested, only from main (ADR 0008)
         if: env.PUBLISH == 'true' && steps.current.outputs.skip != 'true'
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

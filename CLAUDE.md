@@ -7,7 +7,7 @@ Issues describe the work (`gh issue list`). Issue #1 is the libarchive build sys
 ## Sources of the tools
 
 - **tar (bsdtar) and the other libarchive tools:** built here with MXE (`x86_64-w64-mingw32.static`), and published as GitHub releases of this repo (`vX.Y.Z` for the full packages, `static-X.Y.Z` for the static tools only). The images download the `static-X.Y.Z` release asset. They never use Windows' own `tar.exe`, which is old on ltsc2019 and ltsc2022 and can't read zstd there.
-- **curl:** Windows' own `C:\Windows\System32\curl.exe` (Schannel). curl.se's LibreSSL build can't verify HTTPS on Nano Server, so it isn't shipped (`docs/adr/0003`).
+- **curl:** Windows' own `C:\Windows\System32\curl.exe` (Schannel). curl.se's LibreSSL build can't verify HTTPS on Nano Server, so it isn't shipped (`docs/adr/0007`).
 - **jq:** `jq-windows-amd64.exe` from <https://github.com/jqlang/jq/releases>.
 - **Microsoft Edit:** `edit-<v>-x86_64-windows.zip` from <https://github.com/microsoft/edit/releases>.
 - **PowerShell 7:** `PowerShell-<v>-win-x64.zip` from <https://github.com/PowerShell/PowerShell/releases>.

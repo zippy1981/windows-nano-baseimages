@@ -1,8 +1,8 @@
-# 0004. Images build on self-hosted runners and publish from main
+# 0008. Images build on self-hosted runners and publish from main
 
 - Status: Accepted
 - Date: 2026-11-06
-- Deciders: @zippy1981
+- Deciders: zippy1981
 - Related: [#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5), [.github/workflows/nanoserver-base.yml](../../.github/workflows/nanoserver-base.yml)
 
 ## Context

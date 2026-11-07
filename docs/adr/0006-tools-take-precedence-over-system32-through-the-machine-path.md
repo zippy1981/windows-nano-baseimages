@@ -1,9 +1,9 @@
-# 0002. Tools take precedence over System32 through the machine PATH
+# 0006. Tools take precedence over System32 through the machine PATH
 
 - Status: Accepted
 - Date: 2026-11-06
-- Deciders: @zippy1981
-- Related: [#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5), [images/nanoserver-base/Dockerfile](../../images/nanoserver-base/Dockerfile), [0003](0003-curl-is-the-windows-curl-with-schannel.md)
+- Deciders: zippy1981
+- Related: [#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5), [images/nanoserver-base/Dockerfile](../../images/nanoserver-base/Dockerfile), [0007](0007-curl-is-the-windows-curl-with-schannel.md)
 
 ## Context
 

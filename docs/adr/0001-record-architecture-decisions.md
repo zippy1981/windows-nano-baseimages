@@ -2,21 +2,21 @@
 
 - Status: Accepted
 - Date: 2026-11-06
-- Deciders: @zippy1981
-- Related: [zippy1981/windows-nano-baseimages#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5)
+- Deciders: zippy1981
+- Related: [issue #1](https://github.com/zippy1981/windows-nano-baseimages/issues/1)
 
 ## Context
 
-This repo makes choices that are hard to undo: where tools are installed in the images, which curl ships, how images are tagged and published, and which runners build them. Downstream images in windows-nano-demos depend on them.
+This repo makes choices that are hard to reverse: how tools are built, how releases are named, and which features ship. Later work, much of it done by agents, needs to know why.
 
 ## Decision
 
-We will record each significant decision as an Architecture Decision Record in `docs/adr/`, in MADR style, numbered from `0001` with no gaps, and list it in [docs/adr/README.md](README.md).
+We will record each significant decision as a numbered MADR-style file in `docs/adr/`, indexed in `docs/adr/README.md`.
 
 ## Consequences
 
-The reason for a choice stays next to the code. Changing a recorded decision means writing a new ADR that supersedes the old one.
+Decisions are reviewable in pull requests. Changing one means writing a new ADR that supersedes it.
 
 ## Alternatives considered
 
-- **Decisions only in issue comments:** they're hard to find later and aren't versioned with the code.
+- Decisions in issue comments only: hard to find later, and not versioned with the code.
