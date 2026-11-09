@@ -39,6 +39,6 @@ Recorded in [ADR 0009](../docs/adr/0009-the-visual-cpp-runtime-is-copied-into-sy
 
 ## Risks
 
-- **Licence of the redistributed DLLs:** Microsoft lets these files be redistributed with an application, under the Visual Studio licence terms. Mitigation: `NOTICE.txt` records the source and points to the terms. The owner should confirm that a base image counts.
+- **Licence of the redistributed DLLs:** Microsoft lets these files be redistributed with an application, under the Visual Studio licence terms. The owner decided that the base image counts as an application ([ADR 0009](../docs/adr/0009-the-visual-cpp-runtime-is-copied-into-system32-from-the-redistributable.md)). `NOTICE.txt` records the source and points to the terms.
 - **A new redistributable changes the file versions:** the build fails on a mismatch, so the README can't drift. Bumps follow the skill.
 - **A Server Core image ships its own, newer runtime:** the installer would exit 1638 and the build would fail. Mitigation: fails loudly; then decide whether to ship the newer copy.

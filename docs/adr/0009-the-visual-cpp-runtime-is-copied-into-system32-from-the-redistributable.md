@@ -16,7 +16,7 @@ nanoserver-base installs a pinned Visual C++ v14 redistributable in a throwaway 
 - **Pin:** the versioned `download.visualstudio.microsoft.com` URL that `aka.ms/vc14/vc_redist.x64.exe` redirects to. Its path contains Microsoft's SHA-256 of the installer, which the build checks.
 - **Checks:** before copying, `Redistributable.psm1` requires each file's name to match `^(vcruntime|msvcp|vcomp|concrt|msvcr)[0-9]+(_[0-9]+)?[.]dll$`. Its version resource must say Microsoft (CompanyName, ProductName and an OriginalFilename equal to its name). Its Authenticode signature must be valid, signed by Microsoft Corporation, and chain to Microsoft Root Certificate Authority 2010 or 2011. Each FileVersion must also equal the pinned redistributable's version. If any check fails, nothing is copied and the build fails.
 - **Location:** `System32`, not `C:\tools\bin`. None of these names exists in Nano Server's `System32`, so no Windows file is replaced, which keeps to [0006](0006-tools-take-precedence-over-system32-through-the-machine-path.md).
-- **Licence:** `C:\tools\licenses\vcredist\NOTICE.txt` records the installer's version, URL and SHA-256, and points to Microsoft's terms for redistributing the Visual C++ files.
+- **Licence:** the base image counts as an application under Microsoft's terms for redistributing the Visual C++ files (the owner's decision, on [#15](https://github.com/zippy1981/windows-nano-baseimages/pull/15)). `C:\tools\licenses\vcredist\NOTICE.txt` records the installer's version, URL and SHA-256, and points to Microsoft's terms for redistributing the Visual C++ files.
 
 ## Consequences
 
