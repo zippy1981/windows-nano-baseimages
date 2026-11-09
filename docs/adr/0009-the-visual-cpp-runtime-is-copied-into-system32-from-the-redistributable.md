@@ -7,7 +7,7 @@
 
 ## Context
 
-PHP, MySQL and Helix need `vcruntime140.dll`, `vcruntime140_1.dll` and `msvcp140.dll`. Nano Server doesn't ship them on any LTSC version, and it can't run Microsoft's redistributable installer. Each image in windows-nano-demos installs the redistributable in its own Server Core stage, from the unpinned `https://aka.ms/vc14/vc_redist.x64.exe`, and copies the DLLs out.
+Executables built with Visual C++ need `vcruntime140.dll`, `vcruntime140_1.dll` and `msvcp140.dll`. Nano Server doesn't ship them on any LTSC version, and it can't run Microsoft's redistributable installer. So each downstream image that needs them installs the redistributable in its own Server Core stage, from the unpinned `https://aka.ms/vc14/vc_redist.x64.exe`, and copies the DLLs out.
 
 ## Decision
 

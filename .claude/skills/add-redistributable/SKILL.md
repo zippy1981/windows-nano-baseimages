@@ -12,7 +12,7 @@ nanoserver-base copies the Visual C++ runtime DLLs listed in `images/nanoserver-
 Add a DLL only when a real image needs it, usually from a [missing-redistributable issue](../../../.github/ISSUE_TEMPLATE/missing-redistributable.yml).
 
 - Reproduce the failure on the base: the program exits with `-1073741515` (`0xC0000135`, a DLL is missing).
-- List what the program imports, on any Windows host with the program unpacked: `dumpbin /dependents program.exe`, or [Dependencies](https://github.com/lucasg/Dependencies). Check the DLLs it loads at run time too, such as PHP extensions.
+- List what the program imports, on any Windows host with the program unpacked: `dumpbin /dependents program.exe`, or [Dependencies](https://github.com/lucasg/Dependencies). Check the DLLs it loads at run time too, such as plugins.
 - The name must match `^(vcruntime|msvcp|vcomp|concrt|msvcr)[0-9]+(_[0-9]+)?[.]dll$`. Names such as `msvcp140_atomic_wait.dll` or `msvcp_win.dll` don't, and can't be added this way. Raise those with the user.
 - Check that Nano Server doesn't already ship it, on all three versions, since the base must never replace a Windows file:
 
@@ -34,7 +34,7 @@ The image build runs the same checks under Windows PowerShell 5.1 on Server Core
 
 ## 3. Add it
 
-- **`images/nanoserver-base/redistributables.json`:** add `{ "name": "...", "neededBy": "..." }`, naming the images and programs that need it.
+- **`images/nanoserver-base/redistributables.json`:** add `{ "name": "..." }`. Which executables need it is a downstream concern, so it isn't recorded here. Link the issue in the pull request instead.
 - **`README.md`:** add a row to the table under "Visual C++ runtime DLLs", with its file version.
 - **`images/nanoserver-base/README.md`:** add the name to the Visual C++ row of "What's in it".
 - **`docs/adr/0009`:** update the DLL list in its Context if the new DLL changes the reasoning.

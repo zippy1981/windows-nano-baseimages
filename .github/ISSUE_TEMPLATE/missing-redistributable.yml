@@ -19,7 +19,7 @@ body:
     attributes:
       label: Image that needs it
       description: The image, or the program in it, that fails. A link to its Dockerfile helps.
-      placeholder: zippy1981/windows-nano-php (php.exe with the gd extension)
+      placeholder: zippy1981/my-image (my-tool.exe)
     validations:
       required: true
   - type: textarea

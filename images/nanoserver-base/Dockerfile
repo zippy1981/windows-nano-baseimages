@@ -110,7 +110,7 @@ RUN C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\VC_redist.x64.exe -Sha25
 FROM ${BASE_IMAGE}
 
 COPY --from=download C:/tools C:/tools
-# Visual C++ runtime DLLs for downstream images such as PHP, MySQL and Helix, so they don't copy them in themselves.
+# Visual C++ runtime DLLs for executables that need them, so downstream images don't copy them in themselves.
 # They go in System32, where every program finds them; no file Nano Server ships is replaced (redistributables.json).
 COPY --from=vcredist C:/vcredist/System32/ C:/Windows/System32/
 COPY --from=vcredist C:/vcredist/license/ C:/tools/licenses/vcredist/
