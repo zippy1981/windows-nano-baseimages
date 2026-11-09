@@ -42,7 +42,8 @@ The tools are in `C:\tools\bin`, which comes first on the machine `PATH`. `C:\Wi
 3. `curl` reports Schannel, and an HTTPS download works.
 4. `echo {"a":[1,2]}| jq -c .a` prints `[1,2]`.
 5. Each Visual C++ runtime DLL in [redistributables.json](redistributables.json) is in `C:\Windows\System32`, is Microsoft's, and is listed in its `NOTICE.txt`. The `-pwsh` smoke test also loads each one and checks it's the pinned version.
-6. Every archive in [tests/archives.json](../../tests/archives.json) is extracted from a file and from a pipe, and checked file by file: path, size and SHA-256 against the zip's central directory, read with .NET; for the 7z, path and size from its headers. Known failures are strict: the test fails if they stop failing, so the entry gets removed.
+6. [tests/downstream/smoke-test.ps1](../../tests/downstream/smoke-test.ps1) builds a throwaway image `FROM` the base with PHP, MySQL and Helix, and checks that they run without bringing their own Visual C++ runtime.
+7. Every archive in [tests/archives.json](../../tests/archives.json) is extracted from a file and from a pipe, and checked file by file: path, size and SHA-256 against the zip's central directory, read with .NET; for the 7z, path and size from its headers. Known failures are strict: the test fails if they stop failing, so the entry gets removed.
 
 Run it locally after `build.cmd`:
 

@@ -38,7 +38,7 @@ They come from the Microsoft Visual C++ v14 Redistributable (x64) 14.51.36247.0,
 3. Its Authenticode signature is valid, its signer is Microsoft Corporation, and it chains to Microsoft Root Certificate Authority 2010 or 2011.
 4. Its file version is the pinned redistributable's version.
 
-The checks are in [Redistributable.psm1](images/nanoserver-base/Redistributable.psm1) and are tested over the allowlist by [tests/Redistributable.Tests.ps1](tests/Redistributable.Tests.ps1). The smoke tests check that each DLL is in `System32` on every version, and the `-pwsh` smoke test loads each one as `ContainerUser`. Where the DLLs came from and their licence terms are in `C:\tools\licenses\vcredist\NOTICE.txt`.
+The checks are in [Redistributable.psm1](images/nanoserver-base/Redistributable.psm1) and are tested over the allowlist by [tests/Redistributable.Tests.ps1](tests/Redistributable.Tests.ps1). The smoke tests check that each DLL is in `System32` on every version, and the `-pwsh` smoke test loads each one as `ContainerUser`. [tests/downstream](tests/downstream/smoke-test.ps1) builds a throwaway image on the new base with PHP, MySQL and Helix, which bring no runtime DLLs of their own. As `ContainerUser`, it checks that `php` loads `intl` and its other extensions, that `mysqld` initializes a data directory and that `hx` runs, on every version. Where the DLLs came from and their licence terms are in `C:\tools\licenses\vcredist\NOTICE.txt`.
 
 If your image needs a runtime DLL that isn't listed, [open a missing-redistributable issue](https://github.com/zippy1981/windows-nano-baseimages/issues/new?template=missing-redistributable.yml). To add one, follow the [add-redistributable skill](.claude/skills/add-redistributable/SKILL.md).
 

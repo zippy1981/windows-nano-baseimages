@@ -28,6 +28,8 @@ Recorded in [ADR 0009](../docs/adr/0009-the-visual-cpp-runtime-is-copied-into-sy
 - [ ] **workflow-author**: a `pester` job on `windows-latest` in `lint-scripts.yml`. Accept: green in CI, with actionlint.
 - [x] **windows-container-tester**: both smoke tests on all three versions (locally, without the archives). Accept: the DLLs load as `ContainerUser` and are 14.51.36247.0.
 
+- [x] **powershell-author**: `tests/downstream` builds a throwaway image `FROM` the base with PHP 8.5.12, MySQL 8.4.13 and Helix 25.07.1, which bring no runtime DLLs, and checks they run as `ContainerUser`. **workflow-author** runs it in `nanoserver-base.yml`. Accept: passes on 2019, 2022 and 2025.
+
 ### Phase 2: Docs
 
 - [x] **adr**: ADR 0009.

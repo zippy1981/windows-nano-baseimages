@@ -102,6 +102,11 @@ jobs:
         # The runner is itself a container, so the test uses docker create and docker cp, never bind mounts
         run: ./images/nanoserver-base/smoke-test.ps1 -Image $env:IMAGE
 
+      - name: Downstream smoke test (PHP, MySQL, Helix)
+        if: steps.current.outputs.skip != 'true'
+        # Builds a throwaway image FROM the just-built base with PHP, MySQL and Helix, and checks they run without copying in the Visual C++ runtime (issue 14)
+        run: ./tests/downstream/smoke-test.ps1 -BaseImage $env:IMAGE -WindowsVersion $env:WINDOWS_VERSION -DownloadImage $env:SERVERCORE_IMAGE
+
       - name: Build nanoserver-base-pwsh
         if: steps.current.outputs.skip != 'true'
         working-directory: images/nanoserver-base-pwsh
