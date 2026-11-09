@@ -1,0 +1,55 @@
+name: Missing redistributable DLL
+description: A program fails on nanoserver-base because a Visual C++ runtime DLL isn't in the image.
+title: "Missing redistributable: <DLL name>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        nanoserver-base ships the Visual C++ runtime DLLs listed in the [README](https://github.com/zippy1981/windows-nano-baseimages#visual-c-runtime-dlls). Use this form when a program needs one that isn't there. Only Microsoft-signed DLLs whose names match `^(vcruntime|msvcp|vcomp|concrt|msvcr)[0-9]+(_[0-9]+)?[.]dll$` can be added.
+  - type: input
+    id: dll
+    attributes:
+      label: DLL name
+      description: The file name only, as the error or a dependency tool reports it.
+      placeholder: vcomp140.dll
+    validations:
+      required: true
+  - type: input
+    id: image
+    attributes:
+      label: Image that needs it
+      description: The image, or the program in it, that fails. A link to its Dockerfile helps.
+      placeholder: zippy1981/my-image (my-tool.exe)
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error text
+      description: The exact error, including the exit code (for example -1073741515, which is 0xC0000135, a missing DLL).
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows build
+      description: Which nanoserver-base tags fail. Check every one you tried.
+      multiple: true
+      options:
+        - ltsc2019
+        - ltsc2022
+        - ltsc2025
+    validations:
+      required: true
+  - type: input
+    id: os-build
+    attributes:
+      label: OS build number
+      description: From `ver` in the container, or the image tag's `<os-build>` part.
+      placeholder: 10.0.26100.6584
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: How you found the DLL was missing (dumpbin /dependents, Dependencies, a Server Core comparison), and whether copying it in fixed the program.

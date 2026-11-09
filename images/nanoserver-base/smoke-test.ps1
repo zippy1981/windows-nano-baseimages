@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Smoke-tests a nanoserver-base image: the tools are found first on PATH, report the pinned versions, load on this
-Windows version, and tar extracts every archive in tests/archives.json correctly, from a file and from a pipe.
+Windows version, and tar extracts every archive in tests/archives.json correctly, from a file and from a pipe. The
+Visual C++ runtime DLLs in redistributables.json are in System32, with their NOTICE.
 
 .DESCRIPTION
 Runs on the CI runner (or any Windows Docker host) with PowerShell 7. Everything runs inside one container as
@@ -84,6 +85,11 @@ $commands = [ordered]@{
     'https' = 'curl -fsSL https://github.com/jqlang/jq/releases/download/jq-1.8.2/sha256sum.txt'
     'licenses' = 'dir /b /s C:\tools\licenses'
 }
+# The Visual C++ runtime DLLs (issue 14). Nano Server can't read their versions without PowerShell, so the -pwsh
+# smoke test loads each one and checks its version; this checks that they're in System32 and readable as ContainerUser.
+$redistributables = @((Get-Content -Raw (Join-Path $PSScriptRoot 'redistributables.json') | ConvertFrom-Json).redistributables.name)
+foreach ($dll in $redistributables) { $commands["dll-$dll"] = "copy /b C:\Windows\System32\$dll C:\r\$dll" }
+$commands['vcredist-notice'] = 'type C:\tools\licenses\vcredist\NOTICE.txt'
 $lines = [Collections.Generic.List[string]]::new()
 $lines.Add('@echo off')
 $lines.Add('mkdir C:\r C:\w')
@@ -192,7 +198,17 @@ Test-Command 'jq-filter' '^\[1,2\]$' '[1,2]'
 Test-Command 'edit' '' ''
 Test-Command 'https' 'jq-windows-amd64\.exe' 'the jq sha256sum.txt over HTTPS'
 Test-Command 'licenses' '(?s)libarchive.*libiconv-[\d.]+\.tar\.gz' 'licence files including the libiconv source'
-foreach ($tool in 'libarchive', 'jq', 'edit') {
+foreach ($dll in $redistributables) {
+    Test-Command "dll-$dll" '1 file\(s\) copied' "$dll copied out of System32"
+    $copy = Join-Path $results $dll
+    $info = (Test-Path $copy) ? (Get-Item $copy).VersionInfo : $null
+    if (-not $info -or $info.CompanyName -ne 'Microsoft Corporation' -or $info.OriginalFilename -ne $dll) {
+        $failures.Add("dll-${dll}: the copy from System32 is missing or isn't Microsoft's $dll")
+    }
+    else { $summary.Add("| FileVersion of ``$dll`` | 0 | ``$($info.FileVersion)`` |") }
+}
+Test-Command 'vcredist-notice' ('(?s)' + (($redistributables | ForEach-Object { [regex]::Escape($_) }) -join '.*') + '.*Redistributable \(x64\) ' + [regex]::Escape((Get-Pin 'VCREDIST_VERSION'))) 'the Visual C++ NOTICE naming every DLL and the pinned version'
+foreach ($tool in 'libarchive', 'jq', 'edit', 'vcredist') {
     if (-not ((Read-Result 'licenses').Output -match "(?i)^C:\\tools\\licenses\\$tool\\")) { $failures.Add("licenses: nothing in C:\tools\licenses\$tool") }
 }
 $curlInfo = (Read-Result 'curl').Output

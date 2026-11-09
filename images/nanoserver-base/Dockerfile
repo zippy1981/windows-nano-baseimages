@@ -1,13 +1,17 @@
-# nanoserver-base: Nano Server with a modern tar (libarchive bsdtar 3.8), jq and Microsoft Edit on PATH.
+# nanoserver-base: Nano Server with a modern tar (libarchive bsdtar 3.8), jq and Microsoft Edit on PATH, and the
+# Visual C++ runtime DLLs in System32.
 #
 # The tools are in C:\tools\bin, which comes first on the machine PATH, so tar finds this repo's bsdtar instead of
 # the old C:\Windows\System32\tar.exe (docs/adr/0006). The System32 files are left as they are. curl is Windows'
 # own C:\Windows\System32\curl.exe: it uses Schannel and the Windows certificate store, which curl.se's LibreSSL
-# build can't do on Nano Server (issue 5).
+# build can't do on Nano Server (issue 5). The Visual C++ runtime DLLs listed in redistributables.json are added to
+# C:\Windows\System32 from a Server Core stage that ran Microsoft's redistributable (issue 14, docs/adr/0009).
 #
 # Licensing: each tool's licence files are in C:\tools\licenses\<tool>. libarchive's static tools link the
 # LGPL-2.1 libiconv. Its release tarball, as published with this repo's static-tools release, is in
-# C:\tools\licenses\libarchive\sources. Everything else shipped is under a permissive licence (BSD, MIT).
+# C:\tools\licenses\libarchive\sources. The Visual C++ runtime is Microsoft's redistributable code: where it came
+# from and its licence terms are in C:\tools\licenses\vcredist\NOTICE.txt. Everything else shipped is under a
+# permissive licence (BSD, MIT).
 #
 # Build from this folder (build.cmd does the same):
 #   docker build --memory 4g --build-arg WINDOWS_VERSION=2022 -t nanoserver-base:ltsc2022 .
@@ -74,9 +78,42 @@ RUN Expand-Archive -Path C:\download\libarchive.zip -DestinationPath C:\unpack; 
     }; \
     Get-ChildItem -Recurse -File C:\tools | Format-Table -AutoSize Length, FullName
 
+# Installs the Visual C++ redistributable, which Nano Server can't run, and keeps only the allowlisted DLLs from
+# System32 that pass Redistributable.psm1's name and signature checks (issue 14). Any other file fails the build.
+FROM ${DOWNLOAD_IMAGE} AS vcredist
+
+SHELL ["powershell", "-NoLogo", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+# Visual C++ v14 redistributable (x64): https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist. The pinned
+# URL is where https://aka.ms/vc14/vc_redist.x64.exe redirects for this version, and its path is Microsoft's SHA-256.
+ENV VCREDIST_VERSION=14.51.36247.0 \
+    VCREDIST_URL=https://download.visualstudio.microsoft.com/download/pr/ebdab8e5-1d7b-4d9f-a11b-cbb1720c3b12/843068991DAAA1F73AD9F6239BCE4D0F6A07A51F18C37EA2A867E9BECA71295C/VC_redist.x64.exe \
+    VCREDIST_SHA256=843068991daaa1f73ad9f6239bce4d0f6a07a51f18c37ea2a867e9beca71295c
+
+COPY Save-VerifiedFile.ps1 Redistributable.psm1 redistributables.json C:/build/
+
+RUN C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\VC_redist.x64.exe -Sha256 ${env:VCREDIST_SHA256} -Uri ${env:VCREDIST_URL}; \
+    $p = Start-Process -FilePath C:\download\VC_redist.x64.exe -ArgumentList '/install', '/quiet', '/norestart' -Wait -PassThru; \
+    if ($p.ExitCode -notin 0, 3010) { throw ('VC_redist.x64.exe exited with ' + $p.ExitCode) }; \
+    Import-Module C:\build\Redistributable.psm1; \
+    $names = (Get-Content -Raw C:\build\redistributables.json | ConvertFrom-Json).redistributables | ForEach-Object { $_.name }; \
+    Copy-Redistributable -Name $names -Source C:\Windows\System32 -Destination C:\vcredist\System32 -ExpectedVersion ${env:VCREDIST_VERSION}; \
+    New-Item -ItemType Directory -Path C:\vcredist\license | Out-Null; \
+    Set-Content -Path C:\vcredist\license\NOTICE.txt -Encoding ascii -Value @( \
+        ('The files ' + ($names -join ', ') + ' in C:\Windows\System32 are from the Microsoft Visual C++ v14'), \
+        ('Redistributable (x64) ' + ${env:VCREDIST_VERSION} + ', installed from ' + ${env:VCREDIST_URL}), \
+        ('(SHA-256 ' + ${env:VCREDIST_SHA256} + '). They are Microsoft software, redistributed under the Visual Studio'), \
+        'licence terms for Distributable Code: https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files', \
+        'Each was checked to carry a valid Microsoft Authenticode signature before it was copied.'); \
+    Get-ChildItem -Recurse -File C:\vcredist | Format-Table -AutoSize Length, FullName
+
 FROM ${BASE_IMAGE}
 
 COPY --from=download C:/tools C:/tools
+# Visual C++ runtime DLLs for executables that need them, so downstream images don't copy them in themselves.
+# They go in System32, where every program finds them; no file Nano Server ships is replaced (redistributables.json).
+COPY --from=vcredist C:/vcredist/System32/ C:/Windows/System32/
+COPY --from=vcredist C:/vcredist/license/ C:/tools/licenses/vcredist/
 
 # Put C:\tools\bin first on the machine PATH (docs/adr/0006). The value comes from the registry, not %PATH%, so no
 # user PATH is folded into it, and %SystemRoot% stays unexpanded. Downstream images can still use setx PATH for their
@@ -86,6 +123,6 @@ RUN for /f "skip=2 tokens=2,*" %a in ('reg query "HKLM\SYSTEM\CurrentControlSet\
 USER ContainerUser
 
 LABEL org.opencontainers.image.source="https://github.com/zippy1981/windows-nano-baseimages" \
-      org.opencontainers.image.licenses="BSD-2-Clause AND MIT AND LGPL-2.1-or-later"
+      org.opencontainers.image.licenses="BSD-2-Clause AND MIT AND LGPL-2.1-or-later AND LicenseRef-Microsoft-Visual-Cpp-Redistributable"
 
 CMD ["cmd"]
