@@ -1,6 +1,7 @@
 # Static checks for the build automation: actionlint on the workflows (with shellcheck on their run
-# steps), shellcheck on the shell scripts, and PSScriptAnalyzer on the PowerShell scripts. No path
-# filters, so the checks can be made required without blocking unrelated pull requests.
+# steps), shellcheck on the shell scripts, PSScriptAnalyzer on the PowerShell scripts, and the
+# Pester tests (on a Windows runner). No path filters, so the checks can be made required without
+# blocking unrelated pull requests.
 name: Lint scripts
 
 on:
@@ -63,3 +64,26 @@ jobs:
             if ($errors) { Write-Output "::error file=$f::parse errors: $errors"; exit 1 }
           }
           if ($results) { exit 1 }
+
+  # Windows runner: the tests need the Visual C++ redistributable DLLs in System32.
+  pester:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install Pester
+        run: Install-Module Pester -RequiredVersion 5.9.1 -Scope CurrentUser -Force -SkipPublisherCheck
+      - name: Pester
+        run: |
+          Import-Module Pester -RequiredVersion 5.9.1
+          $config = New-PesterConfiguration
+          $config.Run.Path = 'tests/Redistributable.Tests.ps1'
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $false
+          Invoke-Pester -Configuration $config

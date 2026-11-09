@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Smoke-tests a nanoserver-base-pwsh image: PowerShell 7 runs as ContainerUser and reports the pinned version, and
-the base image's tools still come first.
+the base image's tools still come first. Each Visual C++ runtime DLL the base image ships loads from System32 and is
+the pinned redistributable's version.
 
 .DESCRIPTION
 Runs on the CI runner with PowerShell 7. The base image's own checks, including every archive, are run by
@@ -26,6 +27,11 @@ $ErrorActionPreference = 'Stop'
 $dockerfile = Get-Content -Raw (Join-Path $PSScriptRoot 'Dockerfile')
 if ($dockerfile -notmatch '(?m)\bPOWERSHELL_VERSION=(\S+)') { throw 'POWERSHELL_VERSION is not set in the Dockerfile' }
 $version = $Matches[1]
+# The Visual C++ runtime DLLs the base image puts in System32 (issue 14), and the redistributable version they're from
+$baseDir = Join-Path $PSScriptRoot '../nanoserver-base'
+$redistributables = @((Get-Content -Raw (Join-Path $baseDir 'redistributables.json') | ConvertFrom-Json).redistributables.name)
+if ((Get-Content -Raw (Join-Path $baseDir 'Dockerfile')) -notmatch '(?m)\bVCREDIST_VERSION=(\S+)') { throw 'VCREDIST_VERSION is not set in the base Dockerfile' }
+$vcredistVersion = $Matches[1]
 
 # One pwsh run that reports everything as JSON. Single quotes only: docker passes the argument to pwsh as is.
 $script = @'
@@ -41,8 +47,15 @@ $curl = (Get-Command curl.exe).Source
     https = (Invoke-WebRequest -UseBasicParsing -Uri https://github.com/jqlang/jq/releases/download/jq-1.8.2/sha256sum.txt).StatusCode
     # pwsh puts its own $PSHOME first on its process PATH, so the machine PATH is read from the registry
     machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-} | ConvertTo-Json -Compress
+    # Each DLL is loaded by its full path, so a copy that pwsh ships itself can't stand in for it
+    dlls = @(REDISTRIBUTABLES | ForEach-Object {
+        $path = Join-Path ([Environment]::SystemDirectory) $_
+        $loaded = try { [Runtime.InteropServices.NativeLibrary]::Load($path) -ne [IntPtr]::Zero } catch { $_.Exception.Message }
+        [ordered]@{ name = $_; loaded = $loaded; version = (Get-Item $path -ErrorAction SilentlyContinue).VersionInfo.FileVersion }
+    })
+} | ConvertTo-Json -Compress -Depth 3
 '@
+$script = $script.Replace('REDISTRIBUTABLES', (($redistributables | ForEach-Object { "'$_'" }) -join ', '))
 $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($script))
 $output = docker run --rm --user ContainerUser $Image pwsh -NoLogo -NoProfile -EncodedCommand $encoded
 $exit = $LASTEXITCODE
@@ -59,6 +72,11 @@ else {
     if ($r.jq -ne '[1,2]') { $failures.Add("jq printed $($r.jq), expected [1,2]") }
     if ($r.https -ne 200) { $failures.Add("Invoke-WebRequest over HTTPS returned $($r.https)") }
     if ($r.machinePath -notmatch '(?i)\AC:\\tools\\bin;.*;C:\\Program Files\\PowerShell\\7\z' -or $r.machinePath -match ';;') { $failures.Add("machine PATH is $($r.machinePath)") }
+    foreach ($d in @($r.dlls)) {
+        if ($d.loaded -ne $true) { $failures.Add("$($d.name) didn't load from System32: $($d.loaded)") }
+        if ($d.version -ne $vcredistVersion) { $failures.Add("$($d.name) is version $($d.version), expected $vcredistVersion") }
+    }
+    if (@($r.dlls).Count -ne $redistributables.Count) { $failures.Add("expected $($redistributables.Count) DLL results, got $(@($r.dlls).Count)") }
     $report = @("### Smoke test: $Image", '', '```json', ($r | ConvertTo-Json), '```')
     $report | ForEach-Object { Write-Host $_ }
     if ($env:GITHUB_STEP_SUMMARY) { $report | Add-Content -Path $env:GITHUB_STEP_SUMMARY }

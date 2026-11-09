@@ -12,3 +12,4 @@ Add a decision as the next numbered `NNNN-title.md` file in this folder, in the 
 | 0006 | [Tools take precedence over System32 through the machine PATH](0006-tools-take-precedence-over-system32-through-the-machine-path.md) | Accepted | 2026-11-06 |
 | 0007 | [curl is the Windows curl with Schannel](0007-curl-is-the-windows-curl-with-schannel.md) | Accepted | 2026-11-06 |
 | 0008 | [Images build on self-hosted runners and publish from main](0008-images-build-on-self-hosted-runners-and-publish-from-main.md) | Accepted | 2026-11-06 |
+| 0009 | [The Visual C++ runtime is copied into System32 from the redistributable](0009-the-visual-cpp-runtime-is-copied-into-system32-from-the-redistributable.md) | Proposed | 2026-11-08 |

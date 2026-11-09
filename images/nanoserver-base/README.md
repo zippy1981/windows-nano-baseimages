@@ -15,6 +15,7 @@ RUN curl -fsSL -o go.zip https://go.dev/dl/go1.27.3.windows-amd64.zip && tar -xf
 | `jq` | 1.8.2 | [jqlang/jq](https://github.com/jqlang/jq/releases) | MIT |
 | `edit` | 2.0.0 | [microsoft/edit](https://github.com/microsoft/edit/releases) | MIT |
 | `curl` | Windows' own | `C:\Windows\System32\curl.exe`, which uses Schannel and the Windows certificate store ([ADR 0007](../../docs/adr/0007-curl-is-the-windows-curl-with-schannel.md)) | Shipped with Windows |
+| `vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll` in `C:\Windows\System32` | 14.51.36247.0 | Microsoft Visual C++ v14 Redistributable (x64), checked as described in [the README](../../README.md#visual-c-runtime-dlls) | Microsoft's redistributable code; see `C:\tools\licenses\vcredist\NOTICE.txt` |
 | `pwsh` (`-pwsh` tags only) | 7.6.9 | [PowerShell/PowerShell](https://github.com/PowerShell/PowerShell/releases) | MIT, in `C:\Program Files\PowerShell\7` |
 
 The image adds about 35 MB to Nano Server (300 MB for ltsc2019, 338 MB for ltsc2022, 522 MB for ltsc2025). The `-pwsh` tags add about 260 MB more.
@@ -40,7 +41,8 @@ The tools are in `C:\tools\bin`, which comes first on the machine `PATH`. `C:\Wi
 2. Every tool runs and reports the pinned version. No tool may fail with `0xC0000135` or `0xC0000139`, the missing-DLL and missing-entry-point errors ltsc2019 is prone to.
 3. `curl` reports Schannel, and an HTTPS download works.
 4. `echo {"a":[1,2]}| jq -c .a` prints `[1,2]`.
-5. Every archive in [tests/archives.json](../../tests/archives.json) is extracted from a file and from a pipe, and checked file by file: path, size and SHA-256 against the zip's central directory, read with .NET; for the 7z, path and size from its headers. Known failures are strict: the test fails if they stop failing, so the entry gets removed.
+5. Each Visual C++ runtime DLL in [redistributables.json](redistributables.json) is in `C:\Windows\System32`, is Microsoft's, and is listed in its `NOTICE.txt`. The `-pwsh` smoke test also loads each one and checks it's the pinned version.
+6. Every archive in [tests/archives.json](../../tests/archives.json) is extracted from a file and from a pipe, and checked file by file: path, size and SHA-256 against the zip's central directory, read with .NET; for the 7z, path and size from its headers. Known failures are strict: the test fails if they stop failing, so the entry gets removed.
 
 Run it locally after `build.cmd`:
 
