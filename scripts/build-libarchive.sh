@@ -23,7 +23,7 @@
 #   SHA256SUMS                                     hashes of the files above
 #
 # The release tarball is checked against keys/libarchive-release-keys.asc with gpgv. Every release is
-# configured with the same CMake options and must build the same four tools. The script fails if a
+# built with the tools, CMake options and config.h checks in scripts/build-libarchive.yaml. The script fails if a
 # feature it asks for is not found by CMake, if a tool is missing, or if a static tool imports a DLL
 # that is not part of Windows.
 set -euo pipefail
@@ -58,7 +58,7 @@ shared_target=x86_64-w64-mingw32.shared
 for tool in "${static_target}-cmake" "${shared_target}-cmake" "${static_target}-objdump" "${static_target}-gcc"; do
     [[ -x ${mxe_dir}/usr/bin/${tool} ]] || die "${mxe_dir}/usr/bin/${tool} not found; set MXE_DIR to an MXE tree with both targets"
 done
-for tool in curl gpg gpgv jq zip file sha256sum xz tar; do
+for tool in curl gpg gpgv jq yq zip file sha256sum xz tar; do
     command -v "${tool}" >/dev/null || die "${tool} is required"
 done
 mxe_info=${mxe_dir}/mxe-info.json
@@ -109,43 +109,29 @@ src=${work}/${name}
 header_version=$(sed -n 's/^#define[[:space:]]\{1,\}ARCHIVE_VERSION_ONLY_STRING[[:space:]]\{1,\}"\(.*\)"$/\1/p' "${src}/libarchive/archive.h")
 [[ ${header_version} == "${version}" ]] || die "archive.h says version '${header_version}', not ${version}"
 
-# --- Feature matrix ----------------------------------------------------------------------------------
+# --- Configuration -----------------------------------------------------------------------------------
 
-# The tools every release builds.
-expected_tools=(bsdtar bsdcpio bsdcat bsdunzip)
+# The tools, the config.h checks and the CMake options, the same for every release.
+config_yaml=${repo_root}/scripts/build-libarchive.yaml
+[[ -f ${config_yaml} ]] || die "${config_yaml} not found"
+# read_config <array> <yq expression>: fills the array with the expression's results, one per line.
+# A missing key, or one with no items, is an error.
+read_config() {
+    local -n _into=$1
+    local items
+    items=$(yq -e "$2" "${config_yaml}") && [[ -n ${items} ]] || die "${config_yaml}: nothing at $2"
+    mapfile -t _into <<<"${items}"
+}
+# Each entry of a cmake map becomes -D<name>=<value>, in file order.
+cmake_expr() { echo ".cmake.$1 | to_entries | .[] | \"-D\" + .key + \"=\" + (.value | tostring)"; }
 
-# config.h defines that must come out set; each is checked after configuring.
-required_defines=(HAVE_ZLIB_H HAVE_LIBZ HAVE_BZLIB_H HAVE_LIBBZ2 HAVE_LZMA_H HAVE_LIBLZMA HAVE_LZ4_H HAVE_LIBLZ4
-    HAVE_ZSTD_H HAVE_LIBZSTD HAVE_OPENSSL_EVP_H HAVE_LIBCRYPTO HAVE_LIBXML2 HAVE_LIBXML_XMLREADER_H HAVE_ICONV
-    HAVE_PCRE2POSIX_H HAVE_BCRYPT_H)
-# Reported, not required: libb2 is not in MXE, so libarchive uses its bundled BLAKE2.
-optional_defines=(HAVE_LIBB2 HAVE_BLAKE2_H HAVE_LIBXMLLITE HAVE_LIBEXPAT HAVE_LZO_LZOCONF_H)
-
-# MXE_USE_CCACHE=OFF: the toolchain then calls the real compilers in usr/bin, not ccache wrappers.
-# The external libraries we link are ON. Archive formats (tar, cpio, zip, 7-Zip, RAR and RAR5 reading,
-# ISO9660, XAR, WARC, CAB, LHA, ar, mtree, shar) are built in; they have no CMake switches.
-# Left OFF on purpose (docs/adr/0004-libarchive-feature-set.md): LZO is GPL-2.0, mbedTLS and Nettle
-# duplicate OpenSSL, PCRE (1) is superseded by PCRE2, Expat is redundant with libxml2, ACLs and extended
-# attributes are POSIX features, and the tests need Windows to run.
-common_args=(
-    -DCMAKE_BUILD_TYPE=Release -DENABLE_INSTALL=ON -DMXE_USE_CCACHE=OFF
-    -DENABLE_ZLIB=ON -DENABLE_BZip2=ON -DENABLE_LZMA=ON -DENABLE_LZ4=ON -DENABLE_ZSTD=ON
-    -DENABLE_OPENSSL=ON -DENABLE_CNG=ON -DENABLE_LIBXML2=ON -DENABLE_ICONV=ON -DENABLE_PCRE2POSIX=ON
-    -DENABLE_LIBB2=ON -DENABLE_TAR=ON -DENABLE_CPIO=ON -DENABLE_CAT=ON -DENABLE_UNZIP=ON -DENABLE_MD=ON
-    -DENABLE_LZO=OFF -DENABLE_MBEDTLS=OFF -DENABLE_NETTLE=OFF -DENABLE_PCREPOSIX=OFF -DENABLE_EXPAT=OFF
-    -DENABLE_BSDXML=OFF -DENABLE_ACL=OFF -DENABLE_XATTR=OFF -DENABLE_TEST=OFF -DENABLE_COVERAGE=OFF
-    -DENABLE_WERROR=OFF -DENABLE_CLANG_TIDY=OFF
-)
-
-# Static links of OpenSSL and libxml2 need these after them on the link line; the standard libraries
-# come last, so they resolve what the static archives leave open.
-static_std_libs="-liconv -llzma -lz -lbcrypt -lcrypt32 -lws2_32 -luser32 -ladvapi32 -lshell32 -lole32 -lkernel32"
-# libarchive's LIBXML_STATIC probe only compiles, so it misses that MXE's libxml2 is static and the XAR
-# code then expects __imp_xml* DLL imports. Define it for the static variant.
-static_args=(-DBUILD_SHARED_LIBS=OFF "-DCMAKE_C_STANDARD_LIBRARIES=${static_std_libs}" -DCMAKE_C_FLAGS=-DLIBXML_STATIC
-    -DENABLE_TAR_SHARED=OFF -DENABLE_CPIO_SHARED=OFF -DENABLE_CAT_SHARED=OFF -DENABLE_UNZIP_SHARED=OFF)
-shared_args=(-DBUILD_SHARED_LIBS=ON
-    -DENABLE_TAR_SHARED=ON -DENABLE_CPIO_SHARED=ON -DENABLE_CAT_SHARED=ON -DENABLE_UNZIP_SHARED=ON)
+expected_tools=() required_defines=() optional_defines=() common_args=() static_args=() shared_args=()
+read_config expected_tools '.tools[]'
+read_config required_defines '.required_defines[]'
+read_config optional_defines '.optional_defines[]'
+read_config common_args "$(cmake_expr common)"
+read_config static_args "$(cmake_expr static)"
+read_config shared_args "$(cmake_expr shared)"
 
 # --- Build -------------------------------------------------------------------------------------------
 

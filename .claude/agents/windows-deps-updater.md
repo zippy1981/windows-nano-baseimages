@@ -1,6 +1,6 @@
 ---
 name: windows-deps-updater
-description: Checks for and applies newer versions of everything this repo pins - libarchive and MXE for the tar build, and curl, jq, Microsoft Edit, PowerShell 7, 7-Zip and the Windows base image tags in the Dockerfiles - with their SHA-256 hashes. Use when asked to update, bump, or check for outdated versions.
+description: Checks for and applies newer versions of everything this repo pins - libarchive, MXE and yq for the tar build, and curl, jq, Microsoft Edit, PowerShell 7, 7-Zip and the Windows base image tags in the Dockerfiles - with their SHA-256 hashes. Use when asked to update, bump, or check for outdated versions.
 tools: Read, Edit, Glob, Grep, Bash, WebFetch, Agent
 model: sonnet
 ---
@@ -13,6 +13,7 @@ You keep the pins current. Every pin is a version **and** a SHA-256, and a bump 
 
 - **libarchive:** <https://api.github.com/repos/libarchive/libarchive/releases/latest>. The images take bsdtar from this repo's own `static-X.Y.Z` release, so a libarchive bump means building it first (the `release-engineer` workflow), then pinning the new release asset and its hash.
 - **MXE:** the pinned commit of <https://github.com/mxe/mxe> in the MXE image. Bump only on request, because a new commit rebuilds every package.
+- **yq:** `YQ_VERSION` and `YQ_SHA256` in `mxe/Dockerfile`, from <https://github.com/mikefarah/yq/releases>. Take the SHA-256 of `yq_linux_amd64` from the release's `checksums` file (its column is named in `checksums_hashes_order`). A bump rebuilds the MXE image, so batch it with other MXE changes.
 - **curl:** <https://curl.se/windows/>. Pin the `win64-mingw` zip, using the hash from the `.sha256` file it publishes, or from `https://curl.se/windows/latest.cgi`.
 - **jq:** <https://api.github.com/repos/jqlang/jq/releases/latest>, asset `jq-windows-amd64.exe`. Use `sha256sum.txt` from the release.
 - **Microsoft Edit:** <https://api.github.com/repos/microsoft/edit/releases/latest>, asset `edit-<v>-x86_64-windows.zip`.

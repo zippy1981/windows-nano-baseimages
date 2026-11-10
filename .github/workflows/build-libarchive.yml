@@ -35,6 +35,7 @@ on:
     paths:
       - keys/**
       - scripts/build-libarchive.sh
+      - scripts/build-libarchive.yaml
       - scripts/mxe-image-tag.sh
       - scripts/Test-LibarchivePackage.ps1
       - .github/workflows/build-libarchive.yml

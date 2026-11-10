@@ -22,10 +22,11 @@ Everything Linux runs on GitHub-hosted `ubuntu-latest` runners. Nothing runs on 
 
 | File | What it does |
 | --- | --- |
-| `mxe/Dockerfile` | Ubuntu 24.04 (pinned by digest) with MXE pinned to a commit, building both targets and the dependencies. Runs as the non-root user `mxe` (uid 1001). |
+| `mxe/Dockerfile` | Ubuntu 24.04 (pinned by digest) with MXE pinned to a commit, building both targets and the dependencies. Adds yq, pinned by version and SHA-256, to read the build configuration. Runs as the non-root user `mxe` (uid 1001). |
 | `mxe/record-mxe-info.sh` | Writes `/opt/mxe/mxe-info.json` (MXE commit and package versions), and copies licences to `/opt/mxe/licenses` and the libiconv source to `/opt/mxe/sources`. |
 | `scripts/mxe-image-tag.sh` | Prints the image reference: `ghcr.io/<owner>/mxe-libarchive:latest`, or `:sha-<full SHA>` for a commit given as its argument. |
 | `scripts/build-libarchive.sh` | Downloads, verifies, configures, builds, validates and packages one release. |
+| `scripts/build-libarchive.yaml` | What every release is built with: the tools, the CMake options for each variant (`-D<name>=<value>`), and the `config.h` defines that must be set. The script reads it with yq. |
 | `scripts/Test-LibarchivePackage.ps1` | The Windows smoke test of one package. |
 | `scripts/trigger-latest-release.sh` | The upstream check and dispatch. |
 | `keys/libarchive-release-keys.asc` | The OpenPGP keys libarchive releases are signed with. |
@@ -58,7 +59,7 @@ The image builds MXE's `x86_64-w64-mingw32.static` and `x86_64-w64-mingw32.share
 | Expat, bsdxml | `ENABLE_EXPAT`, `ENABLE_BSDXML` | Off: libxml2 is used |
 | ACLs, extended attributes | `ENABLE_ACL`, `ENABLE_XATTR` | Off: POSIX only |
 
-"Required" means `build-libarchive.sh` fails if the matching `config.h` define (for example `HAVE_ZSTD_H` and `HAVE_LIBZSTD`) is not set after configuring. Every release gets the same fixed set of CMake options, written out in the script: libarchive has kept its `ENABLE_*` options stable across releases, and if a release drops or renames one, its configure or feature check fails and the script is changed.
+"Required" means `build-libarchive.sh` fails if the matching `config.h` define (for example `HAVE_ZSTD_H` and `HAVE_LIBZSTD`) is not set after configuring. Every release gets the same CMake options, tools and `config.h` checks, from `scripts/build-libarchive.yaml`: libarchive has kept its `ENABLE_*` options stable across releases, and if a release drops or renames one, its configure or feature check fails and the YAML file is changed.
 
 ## Release artifacts
 
@@ -195,7 +196,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 ## Security
 
 - Release tarballs are verified with `gpgv` against the committed keyring, and the tarball must contain only `libarchive-X.Y.Z/` with a matching `archive.h` version.
-- The Ubuntu base is pinned by digest and MXE by commit. MXE checks each package download against the SHA-256 in its recipe.
+- The Ubuntu base is pinned by digest, MXE by commit, and yq by version and SHA-256. MXE checks each package download against the SHA-256 in its recipe.
 - The image runs as a non-root user and holds no credentials. The GHCR login uses `GITHUB_TOKEN` and is logged out after the pull.
 - The version input is validated as `X.Y.Z` before use, and reaches shell steps only through `env:`.
 - Checkouts don't persist credentials, and only the `release` job can write to the repo.
