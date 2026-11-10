@@ -39,6 +39,8 @@ on:
       - keys/**
       - scripts/build-libarchive.sh
       - scripts/build-libarchive.yaml
+      - patches/**
+      - tests/fixtures/**
       - scripts/mxe-image-tag.sh
       - mxe/**
       - scripts/Test-LibarchivePackage.ps1
@@ -263,6 +265,8 @@ jobs:
           Built with: ${deps}.
 
           Build image: ${IMAGE_DIGEST}${IMAGE_REVISION:+, made from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${IMAGE_REVISION}}.
+
+          Patches (in each zip's sources/patches/): $(jq -r '.patches | map(.file | split("/") | last) | join(", ")' "${m}"). Deflate64 is decoded with InflateLib $(jq -r .dependencies.inflatelib "${m}").
 
           Each zip has a manifest.json and MANIFEST.txt with the full feature list and CMake configuration, and a licenses/ folder. libiconv (LGPL-2.1) is linked in; its source is in sources/.
 

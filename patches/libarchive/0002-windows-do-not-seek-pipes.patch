@@ -1,0 +1,91 @@
+On Windows, refuse to seek a pipe, so libarchive doesn't drop the start of a piped archive.
+
+Issue: https://github.com/zippy1981/windows-nano-baseimages/issues/8
+The read callbacks for filenames, file descriptors and FILE* all register a seek callback,
+and the zip format's seekable bidder calls it at bid time even for stdin. On POSIX, lseek()
+on a pipe fails with ESPIPE, the seek returns ARCHIVE_FAILED with the position unchanged, and
+the read core keeps the data it has buffered. On Windows, _lseeki64() on a pipe handle can
+report success. The core then clears its buffer, and the bytes it read while bidding (roughly
+the first 64 KB) are gone. The streaming reader resyncs at a later local file header and bsdtar
+exits 0 with files missing.
+
+Each seek callback now checks GetFileType() first and fails with ESPIPE unless the handle is a
+disk file. FILE_seek returns ARCHIVE_FAILED for ESPIPE, like the other two, instead of
+ARCHIVE_FATAL. Nothing changes on other platforms, or for regular files on Windows.
+
+diff --git a/libarchive/archive_read_open_fd.c b/libarchive/archive_read_open_fd.c
+index 97c944b..8566895 100644
+--- a/libarchive/archive_read_open_fd.c
++++ b/libarchive/archive_read_open_fd.c
+@@ -210,6 +210,17 @@ file_seek(struct archive *a, void *client_data, int64_t request, int whence)
+ 		}
+ 	}
+ 
++#if defined(_WIN32) && !defined(__CYGWIN__)
++	/* Windows' lseek() can report success on a pipe. The read core then
++	 * discards the data it has buffered, so the start of a piped archive
++	 * is lost. Like POSIX lseek(), refuse to seek anything that is not a
++	 * disk file. */
++	if (GetFileType((HANDLE)_get_osfhandle(mine->fd)) != FILE_TYPE_DISK) {
++		errno = ESPIPE;
++		goto err;
++	}
++#endif
++
+ 	r = lseek(mine->fd, seek, whence);
+ 	if (r >= 0)
+ 		return r;
+diff --git a/libarchive/archive_read_open_file.c b/libarchive/archive_read_open_file.c
+index f6dcf82..3477e17 100644
+--- a/libarchive/archive_read_open_file.c
++++ b/libarchive/archive_read_open_file.c
+@@ -223,6 +223,17 @@ FILE_seek(struct archive *a, void *client_data, int64_t request, int whence)
+ 		}
+ 	}
+ 
++#if defined(_WIN32) && !defined(__CYGWIN__)
++	/* Windows' lseek() can report success on a pipe. The read core then
++	 * discards the data it has buffered, so the start of a piped archive
++	 * is lost. Like POSIX lseek(), refuse to seek anything that is not a
++	 * disk file. */
++	if (GetFileType((HANDLE)_get_osfhandle(fileno(mine->f))) != FILE_TYPE_DISK) {
++		errno = ESPIPE;
++		goto err;
++	}
++#endif
++
+ #ifdef __ANDROID__
+ 	/* Newer Android versions have fseeko...to meditate. */
+ 	int64_t ret = lseek(fileno(mine->f), seek, whence);
+@@ -245,6 +256,9 @@ FILE_seek(struct archive *a, void *client_data, int64_t request, int whence)
+ 	/* If we arrive here, the input is corrupted or truncated so fail. */
+ err:
+ 	archive_set_error(a, errno, "Error seeking in FILE* pointer");
++	/* Not seekable: the caller can carry on without seeking. */
++	if (errno == ESPIPE)
++		return (ARCHIVE_FAILED);
+ 	return (ARCHIVE_FATAL);
+ }
+ 
+diff --git a/libarchive/archive_read_open_filename.c b/libarchive/archive_read_open_filename.c
+index 2c442eb..1c059ed 100644
+--- a/libarchive/archive_read_open_filename.c
++++ b/libarchive/archive_read_open_filename.c
+@@ -579,6 +579,17 @@ file_seek(struct archive *a, void *client_data, int64_t request, int whence)
+ 		}
+ 	}
+ 
++#if defined(_WIN32) && !defined(__CYGWIN__)
++	/* Windows' lseek() can report success on a pipe. The read core then
++	 * discards the data it has buffered, so the start of a piped archive
++	 * is lost. Like POSIX lseek(), refuse to seek anything that is not a
++	 * disk file. */
++	if (GetFileType((HANDLE)_get_osfhandle(mine->fd)) != FILE_TYPE_DISK) {
++		errno = ESPIPE;
++		goto err;
++	}
++#endif
++
+ 	r = lseek(mine->fd, seek, whence);
+ 	if (r >= 0)
+ 		return r;

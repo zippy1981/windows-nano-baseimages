@@ -23,7 +23,8 @@
 #   SHA256SUMS                                     hashes of the files above
 #
 # The release tarball is checked against keys/libarchive-release-keys.asc with gpgv. Every release is
-# built with the tools, CMake options and config.h checks in scripts/build-libarchive.yaml. The script fails if a
+# built with the tools, patches, InflateLib pin, CMake options and config.h checks in
+# scripts/build-libarchive.yaml. The script fails if a
 # feature it asks for is not found by CMake, if a tool is missing, or if a static tool imports a DLL
 # that is not part of Windows.
 set -euo pipefail
@@ -58,7 +59,7 @@ shared_target=x86_64-w64-mingw32.shared
 for tool in "${static_target}-cmake" "${shared_target}-cmake" "${static_target}-objdump" "${static_target}-gcc"; do
     [[ -x ${mxe_dir}/usr/bin/${tool} ]] || die "${mxe_dir}/usr/bin/${tool} not found; set MXE_DIR to an MXE tree with both targets"
 done
-for tool in curl gpg gpgv jq yq zip file sha256sum xz tar; do
+for tool in curl gpg gpgv jq yq patch zip file sha256sum xz tar; do
     command -v "${tool}" >/dev/null || die "${tool} is required"
 done
 mxe_info=${mxe_dir}/mxe-info.json
@@ -132,6 +133,54 @@ read_config optional_defines '.optional_defines[]'
 read_config common_args "$(cmake_expr common)"
 read_config static_args "$(cmake_expr static)"
 read_config shared_args "$(cmake_expr shared)"
+patches=() inflatelib_version=() inflatelib_commit=() inflatelib_url=() inflatelib_sha256=()
+read_config patches '.patches[]'
+read_config inflatelib_version '.inflatelib.version'
+read_config inflatelib_commit '.inflatelib.commit'
+read_config inflatelib_url '.inflatelib.url'
+read_config inflatelib_sha256 '.inflatelib.sha256'
+
+# --- Patches -----------------------------------------------------------------------------------------
+
+# Each patch must apply exactly (no fuzz), in order. Their hashes go in the manifest.
+declare -A patch_sha256=()
+for patch_file in "${patches[@]}"; do
+    [[ -f ${repo_root}/${patch_file} ]] || die "${patch_file} not found"
+    log "Applying ${patch_file}"
+    patch -d "${src}" -p1 --batch --forward --fuzz=0 --no-backup-if-mismatch -i "${repo_root}/${patch_file}" \
+        >"${work}/patch-$(basename "${patch_file}").log" 2>&1 \
+        || { cat "${work}/patch-$(basename "${patch_file}").log" >&2; die "${patch_file} does not apply to ${version}"; }
+    patch_sha256[${patch_file}]=$(sha256sum "${repo_root}/${patch_file}" | cut -d' ' -f1)
+done
+
+# --- InflateLib --------------------------------------------------------------------------------------
+
+# The Deflate64 decoder patch 0001 uses, built as a static library for each variant.
+inflatelib_name=inflatelib-${inflatelib_version[0]}
+inflatelib_tarball=${work}/${inflatelib_name}.tar.gz
+log "Downloading ${inflatelib_url[0]}"
+download "${inflatelib_url[0]}" "${inflatelib_tarball}"
+echo "${inflatelib_sha256[0]}  ${inflatelib_tarball}" | sha256sum --check --strict --quiet \
+    || die "${inflatelib_tarball}: SHA-256 is not ${inflatelib_sha256[0]}"
+[[ $(tar -tzf "${inflatelib_tarball}" | cut -d/ -f1 | sort -u) == "${inflatelib_name}" ]] \
+    || die "expected ${inflatelib_tarball} to contain only ${inflatelib_name}/"
+tar -xzf "${inflatelib_tarball}" -C "${work}"
+
+build_inflatelib() {
+    local variant=$1 target=$2
+    local build=${work}/build-inflatelib-${variant} prefix=${work}/inflatelib-${variant}
+    log "Building InflateLib ${inflatelib_version[0]} for the ${variant} variant"
+    { "${mxe_dir}/usr/bin/${target}-cmake" -S "${work}/${inflatelib_name}" -B "${build}" \
+          -DCMAKE_BUILD_TYPE=Release -DINFLATELIB_TEST=OFF -DINFLATELIB_BUILD_SHARED=OFF \
+          "-DCMAKE_INSTALL_PREFIX=${prefix}" \
+      && cmake --build "${build}" --parallel "${jobs}" \
+      && cmake --install "${build}"; } >"${work}/inflatelib-${variant}.log" 2>&1 \
+        || { tail -n 40 "${work}/inflatelib-${variant}.log" >&2; die "InflateLib build failed for ${variant}"; }
+    [[ -f ${prefix}/lib/libinflatelib.a && -f ${prefix}/cmake/inflatelib-config.cmake ]] \
+        || die "InflateLib for ${variant} did not install lib/libinflatelib.a and cmake/inflatelib-config.cmake"
+}
+build_inflatelib static "${static_target}"
+build_inflatelib shared "${shared_target}"
 
 # --- Build -------------------------------------------------------------------------------------------
 
@@ -153,7 +202,8 @@ build_variant() {
     local variant=$1 target=$2
     shift 2
     local build=${work}/build-${variant} stage=${work}/stage-${variant}
-    local args=("${common_args[@]}" "$@" "-DCMAKE_INSTALL_PREFIX=${stage}")
+    local args=("${common_args[@]}" "$@" "-Dinflatelib_DIR=${work}/inflatelib-${variant}/cmake"
+        "-DCMAKE_INSTALL_PREFIX=${stage}")
     config_args[${variant}]="${target}-cmake ${args[*]}"
     log "Configuring the ${variant} build"
     "${mxe_dir}/usr/bin/${target}-cmake" -S "${src}" -B "${build}" "${args[@]}" >"${work}/configure-${variant}.log" 2>&1 \
@@ -253,6 +303,13 @@ imports_json() {
     echo "${obj}"
 }
 
+patches_json() {
+    local patch_file
+    for patch_file in "${patches[@]}"; do
+        jq -n --arg f "${patch_file}" --arg h "${patch_sha256[${patch_file}]}" '{file: $f, sha256: $h}'
+    done | jq -s .
+}
+
 write_manifest() {
     local variant=$1 target=$2 dest=$3
     local build=${work}/build-${variant}
@@ -271,6 +328,11 @@ write_manifest() {
         --argjson imports "$(imports_json "${work}/stage-${variant}")" \
         --argjson mxe "$(cat "${mxe_info}")" \
         --arg tools "${expected_tools[*]}" \
+        --arg inflatelib "${inflatelib_version[0]}" \
+        --arg inflatelib_url "${inflatelib_url[0]}" \
+        --arg inflatelib_commit "${inflatelib_commit[0]}" \
+        --arg inflatelib_sha256 "${inflatelib_sha256[0]}" \
+        --argjson patches "$(patches_json)" \
         '{
           libarchive_version: $version,
           source: {url: $source_url, sha256: $source_sha256, signed_by: $signature_fpr},
@@ -280,7 +342,9 @@ write_manifest() {
           built_in_formats: ["7zip", "ar", "cab", "cpio", "iso9660", "lha", "mtree", "rar (read)", "rar5 (read)", "raw", "shar", "tar", "warc", "xar", "zip"],
           features: $features,
           imports: $imports,
-          dependencies: $mxe.packages,
+          dependencies: ($mxe.packages + {inflatelib: $inflatelib}),
+          patches: $patches,
+          inflatelib_source: {url: $inflatelib_url, commit: $inflatelib_commit, sha256: $inflatelib_sha256},
           toolchain: {mxe_commit: $mxe.mxe_commit, mxe_commit_date: $mxe.mxe_commit_date, gcc: $gcc, cmake: $cmake},
           build_date: $build_date,
           cmake_configure: $configure
@@ -302,6 +366,11 @@ write_manifest() {
         "Not found:                 \(.features.config_h_unset | join(" "))",
         "Crypto:                    \(.features.crypto | join(" "))",
         "",
+        "InflateLib:  \(.inflatelib_source.url) (commit \(.inflatelib_source.commit), SHA-256 \(.inflatelib_source.sha256))",
+        "",
+        "Patches:",
+        (.patches[] | "  \(.file) (SHA-256 \(.sha256))"),
+        "",
         "Dependencies:",
         (.dependencies | to_entries | sort_by(.key)[] | "  \(.key) \(.value)"),
         "",
@@ -322,13 +391,19 @@ add_licences() {
         cp -r "${mxe_dir}/licenses/${pkg}" "${dest}/licenses/${pkg}"
     done
     cp "${mxe_dir}"/sources/libiconv-*.tar.* "${dest}/sources/" || die "no libiconv source tarball in ${mxe_dir}/sources"
+    mkdir -p "${dest}/licenses/inflatelib" "${dest}/sources/patches"
+    cp "${work}/${inflatelib_name}/LICENSE" "${dest}/licenses/inflatelib/LICENSE"
+    for patch_file in "${patches[@]}"; do cp "${repo_root}/${patch_file}" "${dest}/sources/patches/"; done
     cat >"${dest}/licenses/README.txt" <<EOF
 libarchive ${version} is BSD-2-Clause (licenses/libarchive/COPYING).
 
 These binaries also contain code from the libraries in this folder, each under its own licence: zlib,
 bzip2, xz (liblzma), lz4, zstd (used under its BSD licence), OpenSSL (Apache-2.0), libxml2 (MIT),
-PCRE2 (BSD-3-Clause), the GCC runtime library (GPL-3.0 with the GCC Runtime Library Exception) and the
-mingw-w64 runtime and winpthreads.
+PCRE2 (BSD-3-Clause), InflateLib (MIT), the GCC runtime library (GPL-3.0 with the GCC Runtime Library
+Exception) and the mingw-w64 runtime and winpthreads.
+
+libarchive is built with the patches in sources/patches/, which add Deflate64 (zip method 9) through
+InflateLib and stop Windows builds from losing the start of an archive read from a pipe.
 
 libiconv is LGPL-2.1-or-later. Its unmodified source is in sources/. The build scripts that produced
 these binaries, from libarchive's public source, are at
@@ -360,6 +435,7 @@ cp -r "${static_stage}/lib/libarchive.a" "${static_stage}/lib/pkgconfig" "${d}/l
 for lib in libz.a libbz2.a liblzma.a liblz4.a libzstd.a libcrypto.a libxml2.a libiconv.a libpcre2-8.a libpcre2-posix.a; do
     cp "${mxe_dir}/usr/${static_target}/lib/${lib}" "${d}/lib/" || die "static: ${lib} not found in MXE"
 done
+cp "${work}/inflatelib-static/lib/libinflatelib.a" "${d}/lib/"
 add_licences "${d}"
 write_manifest static "${static_target}" "${d}"
 zip_dir "${d}" "${out_dir}/${static_name}.zip"
