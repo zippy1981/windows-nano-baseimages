@@ -1,6 +1,6 @@
 ---
 name: libarchive-builder
-description: Writes scripts/build-libarchive.sh and the packaging for issue 1 - downloads and verifies an explicit libarchive release, configures every feature the MXE environment supports (checked against that release's CMake options), builds static and shared x86_64 Windows variants, validates the PE files and their DLL imports, and produces the three zips and a manifest. Use for anything about how libarchive is built, configured, validated or packaged.
+description: Writes scripts/build-libarchive.sh and the packaging for issue 1 - downloads and verifies an explicit libarchive release, configures every feature the MXE environment supports with one fixed set of CMake options, builds static and shared x86_64 Windows variants, validates the PE files and their DLL imports, and produces the three zips and a manifest. Use for anything about how libarchive is built, configured, validated or packaged.
 tools: Read, Glob, Grep, Write, Edit, Bash, WebFetch
 model: sonnet
 ---
@@ -14,8 +14,8 @@ You turn a libarchive release into Windows binaries. Read `CLAUDE.md` and issue 
 `scripts/build-libarchive.sh <version> [output-dir]`, run with `set -euo pipefail`:
 
 - **Source:** take the version explicitly, and check it matches `^[0-9]+\.[0-9]+\.[0-9]+$`. Download the official release tarball from <https://github.com/libarchive/libarchive/releases> (or `https://libarchive.org/downloads/`). Check it against the release's published checksum or signature where one exists, then check it extracts. Allow a `LIBARCHIVE_SOURCE_URL` override for testing, but never build from a branch.
-- **Features:** read that release's `CMakeLists.txt` for the real `ENABLE_*` options. Don't invent switches. Formats such as tar, zip, cpio, ISO9660, 7-Zip, RAR (read), XAR, WARC, CAB and LHA are built in. External libraries enable filters and features: zlib, bzip2, LZMA, LZ4, Zstandard, OpenSSL (or mbedTLS or Nettle) for encryption, libxml2 or Expat for XAR, iconv, LZO, and libb2. Enable what MXE provides, and turn off the POSIX-only features (ACL, xattr) explicitly.
-- **Variants:** configure and build twice, with `x86_64-w64-mingw32.static-cmake` and `x86_64-w64-mingw32.shared-cmake`. Build the command-line tools `bsdtar`, `bsdcpio`, `bsdcat` and, where the release has it, `bsdunzip`, plus the libraries and headers.
+- **Features:** the script passes one fixed list of `ENABLE_*` options, the same for every release; check new or renamed switches against `CMakeLists.txt` when bumping, and don't invent them. Formats such as tar, zip, cpio, ISO9660, 7-Zip, RAR (read), XAR, WARC, CAB and LHA are built in. External libraries enable filters and features: zlib, bzip2, LZMA, LZ4, Zstandard, OpenSSL (or mbedTLS or Nettle) for encryption, libxml2 or Expat for XAR, iconv, LZO, and libb2. Enable what MXE provides, and turn off the POSIX-only features (ACL, xattr) explicitly.
+- **Variants:** configure and build twice, with `x86_64-w64-mingw32.static-cmake` and `x86_64-w64-mingw32.shared-cmake`. Build the command-line tools `bsdtar`, `bsdcpio`, `bsdcat` and `bsdunzip`, plus the libraries and headers.
 - **Fail loudly:** after configuring, parse `CMakeCache.txt` and the configure summary. Fail if a feature you asked for came out `OFF`, or if an expected executable is missing.
 
 ## Validation (on Linux)

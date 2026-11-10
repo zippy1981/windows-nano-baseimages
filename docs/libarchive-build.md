@@ -58,7 +58,7 @@ The image builds MXE's `x86_64-w64-mingw32.static` and `x86_64-w64-mingw32.share
 | Expat, bsdxml | `ENABLE_EXPAT`, `ENABLE_BSDXML` | Off: libxml2 is used |
 | ACLs, extended attributes | `ENABLE_ACL`, `ENABLE_XATTR` | Off: POSIX only |
 
-"Required" means `build-libarchive.sh` fails if the matching `config.h` define (for example `HAVE_ZSTD_H` and `HAVE_LIBZSTD`) is not set after configuring. The script passes only options the release's `CMakeLists.txt` declares.
+"Required" means `build-libarchive.sh` fails if the matching `config.h` define (for example `HAVE_ZSTD_H` and `HAVE_LIBZSTD`) is not set after configuring. Every release gets the same fixed set of CMake options, written out in the script: libarchive has kept its `ENABLE_*` options stable across releases, and if a release drops or renames one, its configure or feature check fails and the script is changed.
 
 ## Release artifacts
 
@@ -137,7 +137,7 @@ Why each part is there:
 - **`--userns=keep-id:uid=1001,gid=1001`** maps your uid to `mxe` inside the container. Rootless podman runs containers in a user namespace where container root is you and every other uid is one of your subordinate uids, so `--user "$(id -u):$(id -g)"` (the workflow's form) runs as a stranger: your files show up owned by `root`, and the build can't write `out/`.
 - **`--user "$(id -u):$(id -g)"`** does the same job on rootful Docker, where uids inside and outside the container are the same. The workflow uses it because the runner's uid is 1001 too. Rootless Docker behaves like rootless podman here: run it without `--user`, as container root, which is you.
 
-`build-libarchive.sh --help` lists its options, including `--source-url` with `--sha256` or `--signature-url` for testing an unreleased tarball.
+`build-libarchive.sh --help` lists its options. It always builds the signed tarball from the GitHub release `vX.Y.Z`.
 
 ### Testing a package on Windows
 
@@ -194,7 +194,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 
 ## Security
 
-- Release tarballs are verified with `gpgv` against the committed keyring, and the tarball must contain only `libarchive-X.Y.Z/` with a matching `archive.h` version. `--source-url` needs a SHA-256 or a signature.
+- Release tarballs are verified with `gpgv` against the committed keyring, and the tarball must contain only `libarchive-X.Y.Z/` with a matching `archive.h` version.
 - The Ubuntu base is pinned by digest and MXE by commit. MXE checks each package download against the SHA-256 in its recipe.
 - The image runs as a non-root user and holds no credentials. The GHCR login uses `GITHUB_TOKEN` and is logged out after the pull.
 - The version input is validated as `X.Y.Z` before use, and reaches shell steps only through `env:`.
@@ -206,4 +206,4 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 - **ltsc2019 isn't tested here.** Hosted runners have no Server 2019 image. The tools import only system DLLs and `msvcrt.dll`, which ltsc2019 has; the Nano Server images test them on ltsc2019.
 - **libarchive's own test suite doesn't run**, because it needs Windows. The smoke tests cover each format and filter instead.
 - **`bsdtar --version` doesn't list OpenSSL.** It lists zlib, liblzma, bz2lib, liblz4, libzstd, libxml2 and cng; the manifest's `config.h` features record OpenSSL. libarchive uses Windows CNG for its digests and zip encryption, and OpenSSL where CNG has no implementation.
-- **Only the latest upstream release is watched.** Older versions can be dispatched by hand; options a release lacks are skipped and features it can't find fail the build.
+- **Only the latest upstream release is watched.** Older versions can be dispatched by hand. They get the same CMake options and must build the same four tools, so a release that lacks an option or `bsdunzip` fails the build.
