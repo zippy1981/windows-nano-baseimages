@@ -141,10 +141,14 @@ jobs:
           echo "revision=${revision}" >>"${GITHUB_OUTPUT}"
           echo "MXE image ${IMAGE}: ${digest}, built from ${revision:-an unknown commit}" >>"${GITHUB_STEP_SUMMARY}"
 
+      # The checkout is mounted at /work, the image's WORKDIR. --user keeps the files the build writes
+      # owned by the runner user, and :z relabels the mount on SELinux hosts (a no-op here). To run this
+      # on your own machine, see "Locally, on Linux" in docs/libarchive-build.md: rootless podman needs
+      # --userns=keep-id instead of --user.
       - name: Build libarchive ${{ env.VERSION }}
         run: |
           docker run --rm --user "$(id -u):$(id -g)" \
-            --volume "${GITHUB_WORKSPACE}:/src" --workdir /src \
+            --volume "${GITHUB_WORKSPACE}:/work:z" \
             "${IMAGE}" scripts/build-libarchive.sh "${VERSION}" out
           {
             echo '```text'
