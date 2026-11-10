@@ -31,7 +31,8 @@ This folder holds the [Claude Code subagents](https://docs.claude.com/en/docs/cl
 
 - `markdown-lint`: running markdownlint the way CI does.
 - `dockerfile-docs`: the Dockerfile header, licensing note and `ARG` comment format.
-- `safe-docker-cleanup`: removing only your own containers and images on the shared host (`scripts/Remove-DockerArtifacts.ps1`).
+- `safe-docker-cleanup`: removing only your own containers and images on the shared host, on either engine (`scripts/Remove-DockerArtifacts.ps1`).
+- `host-capabilities`: which engines this host has (Windows, WSL's Linux Docker, or neither), and whether a task runs locally or in GitHub Actions (`scripts/Get-HostCapabilities.ps1`, `scripts/host-capabilities.sh`).
 
 ## How models were chosen
 

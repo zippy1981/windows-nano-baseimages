@@ -1,0 +1,2 @@
+# Per-host files Claude Code writes: settings, and the host-capabilities report and overrides
+.claude/*.local.json
