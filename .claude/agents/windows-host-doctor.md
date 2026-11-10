@@ -13,7 +13,7 @@ You diagnose why builds or runners won't work on this machine. Gather facts read
 
 1. **OS:** `[Environment]::OSVersion` and `Get-ComputerInfo -Property OsName,OsBuildNumber`. A Windows client SKU means Hyper-V isolation.
 2. **Windows engine:** `docker info --format '{{.OSType}} {{.Isolation}} {{.KernelVersion}} {{.DockerRootDir}}'`. This repo's Windows images need `windows`. The windows-nano-demos runners (`DEARING-HP-Z-nano*`) also use this engine. Don't switch it: switching takes them offline.
-3. **Linux builds:** MXE and libarchive build on GitHub-hosted `ubuntu-latest` runners, so this host needs no Linux engine. If a Linux build fails, it's a CI problem, not a host problem.
+3. **Linux engine:** `./scripts/Get-HostCapabilities.ps1 -Refresh -AsJson`, then report `linuxEngine` (`available`, `kind`, `distro`, `reason`, `tried`) and `windowsEngine.ltsc`. Releases and MXE still build on GitHub-hosted `ubuntu-latest` runners, so a missing Linux engine is a warn, not a fail: it only means local linting and `build-libarchive.sh` experiments fall back to CI. Never suggest switching Docker Desktop to Linux containers, or `wsl --shutdown`, which stops the user's devcontainers.
 4. **Features:** `Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All,Containers`. This may need elevation. If it's denied, say so.
 5. **Disk:** free space on the Docker root drive. Windows base images and build caches add up quickly.
 6. **Power:** this host uses Modern Standby, so turning the display off on idle puts it to sleep, and runners stall. Check `powercfg /a` and the AC and DC values of `STANDBYIDLE` and `VIDEOIDLE`. Check Kernel-Power events 506, 507 and 105 for recent stalls. Report only. Don't change them.
