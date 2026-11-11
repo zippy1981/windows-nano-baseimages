@@ -44,6 +44,7 @@ $curl = (Get-Command curl.exe).Source
     tarVersion = (& tar --version | Select-Object -First 1)
     curl = $curl
     jq = ('{"a":[1,2]}' | jq -c .a)
+    yq = ('a: [1, 2]' | yq -o=json -I=0 .a)
     https = (Invoke-WebRequest -UseBasicParsing -Uri https://github.com/jqlang/jq/releases/download/jq-1.8.2/sha256sum.txt).StatusCode
     # pwsh puts its own $PSHOME first on its process PATH, so the machine PATH is read from the registry
     machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
@@ -70,6 +71,7 @@ else {
     if ($r.tarVersion -notmatch '^bsdtar ') { $failures.Add("tar --version printed $($r.tarVersion)") }
     if ($r.curl -ne 'C:\Windows\system32\curl.exe') { $failures.Add("curl.exe resolves to $($r.curl), expected C:\Windows\system32\curl.exe") }
     if ($r.jq -ne '[1,2]') { $failures.Add("jq printed $($r.jq), expected [1,2]") }
+    if ($r.yq -ne '[1,2]') { $failures.Add("yq printed $($r.yq), expected [1,2]") }
     if ($r.https -ne 200) { $failures.Add("Invoke-WebRequest over HTTPS returned $($r.https)") }
     if ($r.machinePath -notmatch '(?i)\AC:\\tools\\bin;.*;C:\\Program Files\\PowerShell\\7\z' -or $r.machinePath -match ';;') { $failures.Add("machine PATH is $($r.machinePath)") }
     foreach ($d in @($r.dlls)) {

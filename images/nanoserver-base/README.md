@@ -1,6 +1,6 @@
 # nanoserver-base
 
-Nano Server with a modern `tar` (libarchive bsdtar), `jq` and Microsoft Edit, for ltsc2019, ltsc2022 and ltsc2025 ([#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5)). The `-pwsh` tags add PowerShell 7 ([nanoserver-base-pwsh](../nanoserver-base-pwsh/Dockerfile)).
+Nano Server with a modern `tar` (libarchive bsdtar), `jq`, `yq` and Microsoft Edit, for ltsc2019, ltsc2022 and ltsc2025 ([#5](https://github.com/zippy1981/windows-nano-baseimages/issues/5)). The `-pwsh` tags add PowerShell 7 ([nanoserver-base-pwsh](../nanoserver-base-pwsh/Dockerfile)).
 
 ```dockerfile
 FROM zippy1981/nanoserver-base:ltsc2025
@@ -13,12 +13,13 @@ RUN curl -fsSL -o go.zip https://go.dev/dl/go1.27.3.windows-amd64.zip && tar -xf
 | --- | --- | --- | --- |
 | `tar` (bsdtar), `bsdcpio`, `bsdcat`, `bsdunzip` | libarchive 3.8.11 | This repo's [`static-3.8.11`](https://github.com/zippy1981/windows-nano-baseimages/releases/tag/static-3.8.11) release | BSD-2-Clause. Statically links zlib, xz, bzip2, lz4, zstd, libxml2, OpenSSL and LGPL-2.1 libiconv, whose source tarball is in `C:\tools\licenses\libarchive\sources`. |
 | `jq` | 1.8.2 | [jqlang/jq](https://github.com/jqlang/jq/releases) | MIT |
+| `yq` | 4.54.3 | [mikefarah/yq](https://github.com/mikefarah/yq/releases) | MIT |
 | `edit` | 2.0.0 | [microsoft/edit](https://github.com/microsoft/edit/releases) | MIT |
 | `curl` | Windows' own | `C:\Windows\System32\curl.exe`, which uses Schannel and the Windows certificate store ([ADR 0007](../../docs/adr/0007-curl-is-the-windows-curl-with-schannel.md)) | Shipped with Windows |
 | `vcruntime140.dll`, `vcruntime140_1.dll`, `msvcp140.dll` in `C:\Windows\System32` | 14.51.36247.0 | Microsoft Visual C++ v14 Redistributable (x64), checked as described in [the README](../../README.md#visual-c-runtime-dlls) | Microsoft's redistributable code; see `C:\tools\licenses\vcredist\NOTICE.txt` |
 | `pwsh` (`-pwsh` tags only) | 7.6.9 | [PowerShell/PowerShell](https://github.com/PowerShell/PowerShell/releases) | MIT, in `C:\Program Files\PowerShell\7` |
 
-The image adds about 35 MB to Nano Server (300 MB for ltsc2019, 338 MB for ltsc2022, 522 MB for ltsc2025). The `-pwsh` tags add about 260 MB more.
+The image adds about 50 MB to Nano Server (318 MB for ltsc2019, 357 MB for ltsc2022, 540 MB for ltsc2025); yq is about 16 MB of that. The `-pwsh` tags add about 260 MB more.
 
 The SHA-256 of every download is pinned in the [Dockerfile](Dockerfile) and checked during the build. A daily workflow opens a bump pull request for a new release.
 
@@ -40,7 +41,7 @@ The tools are in `C:\tools\bin`, which comes first on the machine `PATH`. `C:\Wi
 1. `PATH` starts with `C:\tools\bin`, `tar` resolves to `C:\tools\bin\tar.exe` and `curl` to `C:\Windows\System32\curl.exe`.
 2. Every tool runs and reports the pinned version. No tool may fail with `0xC0000135` or `0xC0000139`, the missing-DLL and missing-entry-point errors ltsc2019 is prone to.
 3. `curl` reports Schannel, and an HTTPS download works.
-4. `echo {"a":[1,2]}| jq -c .a` prints `[1,2]`.
+4. `echo {"a":[1,2]}| jq -c .a` prints `[1,2]`, and `echo a: [1, 2]| yq -o=json -I=0 .a` (YAML in, JSON out) prints `[1,2]`.
 5. Each Visual C++ runtime DLL in [redistributables.json](redistributables.json) is in `C:\Windows\System32`, is Microsoft's, and is listed in its `NOTICE.txt`. The `-pwsh` smoke test also loads each one and checks it's the pinned version.
 6. [tests/downstream/smoke-test.ps1](../../tests/downstream/smoke-test.ps1) builds a throwaway image `FROM` the base with executables that need the Visual C++ runtime but bring none of their own, and checks that they run.
 7. Every archive in [tests/archives.json](../../tests/archives.json) is extracted from a file and from a pipe, and checked file by file: path, size and SHA-256 against the zip's central directory, read with .NET; for the 7z, path and size from its headers. Known failures are strict: the test fails if they stop failing, so the entry gets removed.

@@ -6,7 +6,7 @@ Production-quality Windows Nano Server base images for ltsc2019, ltsc2022 and lt
 
 | Image | Tags | What's in it |
 | --- | --- | --- |
-| [`zippy1981/nanoserver-base`](images/nanoserver-base/README.md) | `ltsc2019`, `ltsc2022`, `ltsc2025` | Nano Server with `tar` (libarchive bsdtar), `bsdcpio`, `bsdcat`, `bsdunzip`, `jq` and `edit` first on `PATH`, and the [Visual C++ runtime DLLs](#visual-c-runtime-dlls) in `System32` |
+| [`zippy1981/nanoserver-base`](images/nanoserver-base/README.md) | `ltsc2019`, `ltsc2022`, `ltsc2025` | Nano Server with `tar` (libarchive bsdtar), `bsdcpio`, `bsdcat`, `bsdunzip`, `jq`, `yq` and `edit` first on `PATH`, and the [Visual C++ runtime DLLs](#visual-c-runtime-dlls) in `System32` |
 | `zippy1981/nanoserver-base` | `ltsc2019-pwsh`, `ltsc2022-pwsh`, `ltsc2025-pwsh` | The same, plus PowerShell 7 |
 
 Each tag also has an immutable `ltsc<ver>[-pwsh]-<os-build>-<sha7>` form ([ADR 0008](docs/adr/0008-images-build-on-self-hosted-runners-and-publish-from-main.md)).
@@ -16,6 +16,7 @@ Each tag also has an immutable `ltsc<ver>[-pwsh]-<os-build>-<sha7>` form ([ADR 0
 | `tar` and the other libarchive tools | Compiled here from [libarchive](https://github.com/libarchive/libarchive) with MXE, on GitHub-hosted Linux runners, and published as this repo's `static-X.Y.Z` releases |
 | `curl` | Windows' own `C:\Windows\System32\curl.exe`, which uses Schannel and the Windows certificate store. curl.se's build can't verify HTTPS on Nano Server ([ADR 0007](docs/adr/0007-curl-is-the-windows-curl-with-schannel.md)). |
 | `jq` | [jqlang/jq](https://github.com/jqlang/jq) releases |
+| `yq` | [mikefarah/yq](https://github.com/mikefarah/yq) v4 releases |
 | `edit` | [Microsoft Edit](https://github.com/microsoft/edit) 2.0 |
 | `pwsh` | [PowerShell 7](https://github.com/PowerShell/PowerShell), in the `-pwsh` tags |
 

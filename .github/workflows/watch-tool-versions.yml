@@ -1,4 +1,4 @@
-# Opens a bump pull request when libarchive (this repo's static-* release), jq, Microsoft Edit or PowerShell has a
+# Opens a bump pull request when libarchive (this repo's static-* release), jq, yq, Microsoft Edit or PowerShell has a
 # newer release than the nanoserver-base Dockerfiles pin, then starts the image build on that branch (issue 5).
 name: Watch tool versions
 

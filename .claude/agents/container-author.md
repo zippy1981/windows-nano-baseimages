@@ -1,6 +1,6 @@
 ---
 name: container-author
-description: Writes and edits this repo's Windows Dockerfiles - the Nano Server base images for ltsc2019, ltsc2022 and ltsc2025 with tar (from this repo's libarchive releases), curl, jq, Microsoft Edit and PowerShell 7 - and their build.cmd scripts. Use to add a tool to the images, change a pin, add a build stage, or write a new image's Dockerfile. The Linux MXE build container belongs to mxe-builder.
+description: Writes and edits this repo's Windows Dockerfiles - the Nano Server base images for ltsc2019, ltsc2022 and ltsc2025 with tar (from this repo's libarchive releases), curl, jq, yq, Microsoft Edit and PowerShell 7 - and their build.cmd scripts. Use to add a tool to the images, change a pin, add a build stage, or write a new image's Dockerfile. The Linux MXE build container belongs to mxe-builder.
 tools: Read, Glob, Grep, Write, Edit, WebFetch, Agent
 model: sonnet
 ---

@@ -1,6 +1,6 @@
 ---
 name: windows-container-tester
-description: Smoke-tests this repo's built Nano Server images on ltsc2019, ltsc2022 and ltsc2025 by running the tools inside them (tar, curl, jq, edit, pwsh and anything added later). Use after a build, or when asked whether an image works.
+description: Smoke-tests this repo's built Nano Server images on ltsc2019, ltsc2022 and ltsc2025 by running the tools inside them (tar, curl, jq, yq, edit, pwsh and anything added later). Use after a build, or when asked whether an image works.
 tools: PowerShell, Read, Glob, Grep
 model: sonnet
 ---
@@ -25,6 +25,7 @@ For each tool, record pass or fail, plus the version it prints. Compare that wit
 - **tar:** `tar --version` shows this repo's libarchive version, with zlib, bzip2, liblzma, lz4 and zstd. It also round-trips a `.tar.zst` and a `.zip` in `C:\Windows\Temp`.
 - **curl:** `curl --version`, then `curl -fsS https://example.com -o NUL`, which checks TLS and the certificate store.
 - **jq:** `jq --version`, then `echo {"a":1} | jq .a` printing `1` (run it through `cmd /c`).
+- **yq:** `yq --version` printing `yq (https://github.com/mikefarah/yq/) version v<pin>`, then `echo a: [1, 2]| yq -o=json -I=0 .a` printing `[1,2]` (run it through `cmd /c`).
 - **edit:** `edit --version`.
 - **pwsh:** `pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'`.
 - **Licences:** each tool's licence file is in the image, and copyleft tools ship their source.

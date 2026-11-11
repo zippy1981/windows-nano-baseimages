@@ -1,4 +1,4 @@
-# nanoserver-base-pwsh: nanoserver-base (bsdtar, jq, Microsoft Edit) plus PowerShell 7 on Nano Server.
+# nanoserver-base-pwsh: nanoserver-base (bsdtar, jq, yq, Microsoft Edit) plus PowerShell 7 on Nano Server.
 #
 # Published as zippy1981/nanoserver-base:ltsc<version>-pwsh. PowerShell is in C:\Program Files\PowerShell\7,
 # which is added to the machine PATH after C:\tools\bin.
