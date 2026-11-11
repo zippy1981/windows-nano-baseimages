@@ -38,7 +38,7 @@ This repo shares a Windows host with `windows-nano-demos`, whose self-hosted run
 
 - Never `docker system prune`, `image prune` or `builder prune`. Remove only containers and images you created, by name (the `safe-docker-cleanup` skill).
 - Don't touch the `DEARING-HP-Z-nano*` containers, or images under `zippy1981/` that you didn't build in this session.
-- **Don't switch Docker Desktop between Windows and Linux containers.** Switching takes the windows-nano-demos runners offline. Linux work, including MXE, runs on GitHub-hosted `ubuntu-latest` runners, so it never needs this host's engine.
+- **Don't switch Docker Desktop between Windows and Linux containers.** Switching takes the windows-nano-demos runners offline. Releases and the MXE image build on GitHub-hosted `ubuntu-latest` runners. For local Linux work (linters, trying `build-libarchive.sh`), the WSL distro's own Docker Engine is a separate engine that's safe to use. It also runs the user's devcontainers, so label everything you create there. Before any container work, use the `host-capabilities` skill: it finds out which engines this host has and routes the task (`docs/adr/0010`).
 - Don't change host settings, services, firewall, DNS, hosts files or certificate stores without asking. Never read, print or store tokens. Runner registration tokens are passed by the user at run time.
 
 ## Workflow
