@@ -115,11 +115,27 @@ docker build --tag mxe-libarchive:local mxe
 docker pull "$(scripts/mxe-image-tag.sh)"
 ```
 
-Then build a release into `./out`:
+Then mount the repo at `/work`, the image's working directory, and build a release into `./out`. The command depends on the container engine, because the image runs as the user `mxe` (uid 1001) and the files the build writes must end up owned by you.
+
+With **rootless podman** (Fedora's default, and what `docker` is when `podman-docker` is installed):
 
 ```bash
-docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/src" --workdir /src mxe-libarchive:local scripts/build-libarchive.sh 3.8.11 out
+podman run --rm --userns=keep-id:uid=1001,gid=1001 --volume "$PWD:/work:z" mxe-libarchive:local scripts/build-libarchive.sh 3.8.11 out
 ```
+
+With **Docker** (rootful, the usual install):
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/work:z" mxe-libarchive:local scripts/build-libarchive.sh 3.8.11 out
+```
+
+For a shell in the container instead, drop the script and add `-it` (for example `podman run --rm -it --userns=keep-id:uid=1001,gid=1001 --volume "$PWD:/work:z" mxe-libarchive:local`). Use the published image's name (`ghcr.io/zippy1981/mxe-libarchive:latest`) in place of `mxe-libarchive:local` if you pulled it.
+
+Why each part is there:
+
+- **`:z`** relabels the repo `container_file_t` so SELinux lets containers read it. Without it, on an SELinux host such as Fedora, `ls /work` gives `Permission denied` even though the uids match. Use `:z` (shared), not `:Z`: `:Z` gives the directory a label private to one container, and every later container without `:Z` is then refused. On hosts without SELinux, and on GitHub's runners, Docker ignores it.
+- **`--userns=keep-id:uid=1001,gid=1001`** maps your uid to `mxe` inside the container. Rootless podman runs containers in a user namespace where container root is you and every other uid is one of your subordinate uids, so `--user "$(id -u):$(id -g)"` (the workflow's form) runs as a stranger: your files show up owned by `root`, and the build can't write `out/`.
+- **`--user "$(id -u):$(id -g)"`** does the same job on rootful Docker, where uids inside and outside the container are the same. The workflow uses it because the runner's uid is 1001 too. Rootless Docker behaves like rootless podman here: run it without `--user`, as container root, which is you.
 
 `build-libarchive.sh --help` lists its options, including `--source-url` with `--sha256` or `--signature-url` for testing an unreleased tarball.
 
@@ -174,6 +190,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 | `signature check failed` | A release was signed with a new key. Confirm it on libarchive's release page, then add it to `keys/libarchive-release-keys.asc`. |
 | The smoke test's Nano Server check is skipped | The runner image has no Docker, or the pull failed. The tool tests on the host still ran. |
 | The watcher says the workflow is not on the default branch | Merge the workflows to `main` first. |
+| `Permission denied` on `/work` in a local container | SELinux or rootless uid mapping. Mount with `:z`, and with rootless podman use `--userns=keep-id:uid=1001,gid=1001` instead of `--user` (see "Locally, on Linux"). |
 
 ## Security
 

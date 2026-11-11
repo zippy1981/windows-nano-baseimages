@@ -1,2 +1,4 @@
+# Local output of scripts/build-libarchive.sh (docs/libarchive-build.md).
+/out/
 # Per-host files Claude Code writes: settings, and the host-capabilities report and overrides
 .claude/*.local.json
