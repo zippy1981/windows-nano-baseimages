@@ -140,3 +140,26 @@ jobs:
             docker rmi -f --no-prune $image 2>$null
           }
           exit 0
+
+  notify-demos:
+    # windows-nano-demos rebuilds its Nano Server images on a new base (its ADR 0018). Its image refresh compares
+    # digests itself, so a dispatch after a run that published nothing new builds nothing there.
+    needs: build-and-test
+    # !cancelled(): a leg that failed doesn't stop the others' new tags from reaching the demos
+    if: "!cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || inputs.publish)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # DEMOS_DISPATCH_TOKEN lives next to the Docker Hub secrets, so only publishing runs from main can read it
+    environment: Docker Hub zippy1981
+    steps:
+      - name: Dispatch the windows-nano-demos image refresh
+        env:
+          # A fine-grained token for zippy1981/windows-nano-demos only, with Contents: read and write
+          GH_TOKEN: ${{ secrets.DEMOS_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::DEMOS_DISPATCH_TOKEN isn't set; windows-nano-demos picks up the new base at its next scheduled refresh"
+            exit 0
+          fi
+          gh api repos/zippy1981/windows-nano-demos/dispatches -f event_type=nanoserver-base-published \
+            -f "client_payload[revision]=${{ github.sha }}"
