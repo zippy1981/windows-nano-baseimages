@@ -8,10 +8,6 @@
 #   [output-dir]   Where the zips go. Defaults to ./out. Earlier packages and work/ are replaced.
 #
 # Options:
-#   --source-url <url>      Build from this tarball instead of the GitHub release (for testing). It
-#                           needs --sha256, or --signature-url for a detached signature.
-#   --signature-url <url>   The detached OpenPGP signature for --source-url.
-#   --sha256 <hex>          The SHA-256 of --source-url.
 #   --jobs <n>              Parallel compile jobs. Defaults to the number of CPUs.
 #   -h, --help              Show this help.
 #
@@ -26,9 +22,10 @@
 #   libarchive-X.Y.Z-windows-x64-manifest.json     the static build's manifest, for release notes
 #   SHA256SUMS                                     hashes of the files above
 #
-# Release tarballs are checked against keys/libarchive-release-keys.asc with gpgv. The script fails if
-# a feature it asks for is not found by CMake, if an expected executable is missing, or if a static
-# executable imports a DLL that is not part of Windows.
+# The release tarball is checked against keys/libarchive-release-keys.asc with gpgv. Every release is
+# configured with the same CMake options and must build the same four tools. The script fails if a
+# feature it asks for is not found by CMake, if a tool is missing, or if a static tool imports a DLL
+# that is not part of Windows.
 set -euo pipefail
 
 usage() { sed -n '2,/^set -euo/{/^set -euo/d;s/^# \{0,1\}//;p}' "$0"; }
@@ -38,16 +35,10 @@ log() { echo "==> $*" >&2; }
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 mxe_dir=${MXE_DIR:-/opt/mxe}
 jobs=$(nproc)
-source_url=
-signature_url=
-source_sha256=
 
 positional=()
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --source-url) source_url=${2:?--source-url needs a value}; shift 2 ;;
-        --signature-url) signature_url=${2:?--signature-url needs a value}; shift 2 ;;
-        --sha256) source_sha256=${2:?--sha256 needs a value}; shift 2 ;;
         --jobs) jobs=${2:?--jobs needs a value}; shift 2 ;;
         -h | --help) usage; exit 0 ;;
         --) shift; positional+=("$@"); break ;;
@@ -61,10 +52,6 @@ version=${positional[0]}
 out_dir=${positional[1]:-out}
 [[ ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must be X.Y.Z, got '${version}'"
 [[ ${jobs} =~ ^[1-9][0-9]*$ ]] || die "--jobs must be a positive integer"
-if [[ -n ${source_url} && -z ${signature_url} && -z ${source_sha256} ]]; then
-    die "--source-url needs --sha256 or --signature-url, so the tarball can be verified"
-fi
-[[ -z ${source_sha256} || ${source_sha256} =~ ^[0-9a-fA-F]{64}$ ]] || die "--sha256 must be 64 hex digits"
 
 static_target=x86_64-w64-mingw32.static
 shared_target=x86_64-w64-mingw32.shared
@@ -88,12 +75,8 @@ mkdir -p "${work}"
 
 # --- Source ------------------------------------------------------------------------------------------
 
-default_url=https://github.com/libarchive/libarchive/releases/download/v${version}/${name}.tar.xz
-if [[ -z ${source_url} ]]; then
-    source_url=${default_url}
-    signature_url=${default_url}.asc
-fi
-tarball=${work}/$(basename "${source_url%%\?*}")
+source_url=https://github.com/libarchive/libarchive/releases/download/v${version}/${name}.tar.xz
+tarball=${work}/${name}.tar.xz
 
 download() {
     local url=$1 dest=$2
@@ -107,21 +90,15 @@ download "${source_url}" "${tarball}"
 actual_sha256=$(sha256sum "${tarball}" | cut -d' ' -f1)
 log "SHA-256 ${actual_sha256}"
 
-signature_fpr=
-if [[ -n ${source_sha256} ]]; then
-    [[ ${actual_sha256,,} == "${source_sha256,,}" ]] || die "SHA-256 mismatch: expected ${source_sha256}, got ${actual_sha256}"
-fi
-if [[ -n ${signature_url} ]]; then
-    log "Verifying the OpenPGP signature ${signature_url}"
-    download "${signature_url}" "${tarball}.asc"
-    keyring=${work}/libarchive-release-keys.gpg
-    gpg --batch --quiet --dearmor <"${repo_root}/keys/libarchive-release-keys.asc" >"${keyring}"
-    status=$(gpgv --keyring "${keyring}" --status-fd 1 "${tarball}.asc" "${tarball}" 2>"${work}/gpgv.log") \
-        || { cat "${work}/gpgv.log" >&2; die "signature check failed for ${tarball}"; }
-    signature_fpr=$(awk '$2 == "VALIDSIG" {print $3; exit}' <<<"${status}")
-    [[ -n ${signature_fpr} ]] || { cat "${work}/gpgv.log" >&2; die "gpgv reported no valid signature"; }
-    log "Good signature from ${signature_fpr}"
-fi
+log "Verifying the OpenPGP signature ${source_url}.asc"
+download "${source_url}.asc" "${tarball}.asc"
+keyring=${work}/libarchive-release-keys.gpg
+gpg --batch --quiet --dearmor <"${repo_root}/keys/libarchive-release-keys.asc" >"${keyring}"
+status=$(gpgv --keyring "${keyring}" --status-fd 1 "${tarball}.asc" "${tarball}" 2>"${work}/gpgv.log") \
+    || { cat "${work}/gpgv.log" >&2; die "signature check failed for ${tarball}"; }
+signature_fpr=$(awk '$2 == "VALIDSIG" {print $3; exit}' <<<"${status}")
+[[ -n ${signature_fpr} ]] || { cat "${work}/gpgv.log" >&2; die "gpgv reported no valid signature"; }
+log "Good signature from ${signature_fpr}"
 
 log "Checking and extracting the tarball"
 tar -tf "${tarball}" >"${work}/tar-list.txt" || die "${tarball} is not a readable tar archive"
@@ -134,19 +111,8 @@ header_version=$(sed -n 's/^#define[[:space:]]\{1,\}ARCHIVE_VERSION_ONLY_STRING[
 
 # --- Feature matrix ----------------------------------------------------------------------------------
 
-# Options this release really has (OPTION(...) in its CMakeLists.txt). Asking for one it lacks is an error.
-mapfile -t release_options < <(grep -oE '^[[:space:]]*(OPTION|option)\([A-Za-z0-9_]+' "${src}/CMakeLists.txt" | sed -E 's/.*\(//' | sort -u)
-has_option() { printf '%s\n' "${release_options[@]}" | grep -qx "$1"; }
-
-# External libraries we link. Archive formats (tar, cpio, zip, 7-Zip, RAR and RAR5 reading, ISO9660,
-# XAR, WARC, CAB, LHA, ar, mtree, shar) are built in; they have no CMake switches.
-want_on=(ENABLE_ZLIB ENABLE_BZip2 ENABLE_LZMA ENABLE_LZ4 ENABLE_ZSTD ENABLE_OPENSSL ENABLE_CNG ENABLE_LIBXML2
-    ENABLE_ICONV ENABLE_PCRE2POSIX ENABLE_LIBB2 ENABLE_TAR ENABLE_CPIO ENABLE_CAT ENABLE_UNZIP ENABLE_MD)
-# Left out on purpose (docs/adr/0004-libarchive-feature-set.md): LZO is GPL-2.0, mbedTLS and Nettle
-# duplicate OpenSSL, PCRE (1) is superseded by PCRE2, Expat is redundant with libxml2, ACLs and extended
-# attributes are POSIX features, and the tests need Windows to run.
-want_off=(ENABLE_LZO ENABLE_MBEDTLS ENABLE_NETTLE ENABLE_PCREPOSIX ENABLE_EXPAT ENABLE_BSDXML ENABLE_ACL
-    ENABLE_XATTR ENABLE_TEST ENABLE_COVERAGE ENABLE_WERROR ENABLE_CLANG_TIDY)
+# The tools every release builds.
+expected_tools=(bsdtar bsdcpio bsdcat bsdunzip)
 
 # config.h defines that must come out set; each is checked after configuring.
 required_defines=(HAVE_ZLIB_H HAVE_LIBZ HAVE_BZLIB_H HAVE_LIBBZ2 HAVE_LZMA_H HAVE_LIBLZMA HAVE_LZ4_H HAVE_LIBLZ4
@@ -156,29 +122,30 @@ required_defines=(HAVE_ZLIB_H HAVE_LIBZ HAVE_BZLIB_H HAVE_LIBBZ2 HAVE_LZMA_H HAV
 optional_defines=(HAVE_LIBB2 HAVE_BLAKE2_H HAVE_LIBXMLLITE HAVE_LIBEXPAT HAVE_LZO_LZOCONF_H)
 
 # MXE_USE_CCACHE=OFF: the toolchain then calls the real compilers in usr/bin, not ccache wrappers.
-common_args=(-DCMAKE_BUILD_TYPE=Release -DENABLE_INSTALL=ON -DMXE_USE_CCACHE=OFF)
-for opt in "${want_on[@]}"; do
-    if has_option "${opt}"; then common_args+=("-D${opt}=ON"); else log "note: ${opt} is not an option in ${version}"; fi
-done
-for opt in "${want_off[@]}"; do
-    has_option "${opt}" && common_args+=("-D${opt}=OFF")
-done
-# Older releases have no bsdunzip.
-expected_tools=(bsdtar bsdcpio bsdcat)
-[[ -d ${src}/unzip ]] && has_option ENABLE_UNZIP && expected_tools+=(bsdunzip)
+# The external libraries we link are ON. Archive formats (tar, cpio, zip, 7-Zip, RAR and RAR5 reading,
+# ISO9660, XAR, WARC, CAB, LHA, ar, mtree, shar) are built in; they have no CMake switches.
+# Left OFF on purpose (docs/adr/0004-libarchive-feature-set.md): LZO is GPL-2.0, mbedTLS and Nettle
+# duplicate OpenSSL, PCRE (1) is superseded by PCRE2, Expat is redundant with libxml2, ACLs and extended
+# attributes are POSIX features, and the tests need Windows to run.
+common_args=(
+    -DCMAKE_BUILD_TYPE=Release -DENABLE_INSTALL=ON -DMXE_USE_CCACHE=OFF
+    -DENABLE_ZLIB=ON -DENABLE_BZip2=ON -DENABLE_LZMA=ON -DENABLE_LZ4=ON -DENABLE_ZSTD=ON
+    -DENABLE_OPENSSL=ON -DENABLE_CNG=ON -DENABLE_LIBXML2=ON -DENABLE_ICONV=ON -DENABLE_PCRE2POSIX=ON
+    -DENABLE_LIBB2=ON -DENABLE_TAR=ON -DENABLE_CPIO=ON -DENABLE_CAT=ON -DENABLE_UNZIP=ON -DENABLE_MD=ON
+    -DENABLE_LZO=OFF -DENABLE_MBEDTLS=OFF -DENABLE_NETTLE=OFF -DENABLE_PCREPOSIX=OFF -DENABLE_EXPAT=OFF
+    -DENABLE_BSDXML=OFF -DENABLE_ACL=OFF -DENABLE_XATTR=OFF -DENABLE_TEST=OFF -DENABLE_COVERAGE=OFF
+    -DENABLE_WERROR=OFF -DENABLE_CLANG_TIDY=OFF
+)
 
 # Static links of OpenSSL and libxml2 need these after them on the link line; the standard libraries
 # come last, so they resolve what the static archives leave open.
 static_std_libs="-liconv -llzma -lz -lbcrypt -lcrypt32 -lws2_32 -luser32 -ladvapi32 -lshell32 -lole32 -lkernel32"
 # libarchive's LIBXML_STATIC probe only compiles, so it misses that MXE's libxml2 is static and the XAR
 # code then expects __imp_xml* DLL imports. Define it for the static variant.
-static_args=(-DBUILD_SHARED_LIBS=OFF "-DCMAKE_C_STANDARD_LIBRARIES=${static_std_libs}" -DCMAKE_C_FLAGS=-DLIBXML_STATIC)
-shared_args=(-DBUILD_SHARED_LIBS=ON)
-for tool in TAR CPIO CAT UNZIP; do
-    has_option "ENABLE_${tool}_SHARED" || continue
-    static_args+=("-DENABLE_${tool}_SHARED=OFF")
-    shared_args+=("-DENABLE_${tool}_SHARED=ON")
-done
+static_args=(-DBUILD_SHARED_LIBS=OFF "-DCMAKE_C_STANDARD_LIBRARIES=${static_std_libs}" -DCMAKE_C_FLAGS=-DLIBXML_STATIC
+    -DENABLE_TAR_SHARED=OFF -DENABLE_CPIO_SHARED=OFF -DENABLE_CAT_SHARED=OFF -DENABLE_UNZIP_SHARED=OFF)
+shared_args=(-DBUILD_SHARED_LIBS=ON
+    -DENABLE_TAR_SHARED=ON -DENABLE_CPIO_SHARED=ON -DENABLE_CAT_SHARED=ON -DENABLE_UNZIP_SHARED=ON)
 
 # --- Build -------------------------------------------------------------------------------------------
 
@@ -270,8 +237,7 @@ while [[ ${#queue[@]} -gt 0 ]]; do
         queue+=("${path}")
     done < <(imports_of "${pe}")
 done
-[[ -n ${shared_dlls[libarchive.dll]:-} || -n ${shared_dlls[libarchive-13.dll]:-} ]] \
-    || log "note: the shared tools do not import a libarchive DLL (ENABLE_*_SHARED missing in ${version}?)"
+[[ -n ${shared_dlls[libarchive.dll]:-} ]] || die "shared: the tools do not import libarchive.dll"
 log "  shared DLLs: $(for p in "${shared_dlls[@]}"; do basename "${p}"; done | sort | tr '\n' ' ')"
 
 # --- Manifest ----------------------------------------------------------------------------------------
@@ -321,7 +287,7 @@ write_manifest() {
         --arg tools "${expected_tools[*]}" \
         '{
           libarchive_version: $version,
-          source: {url: $source_url, sha256: $source_sha256, signed_by: (if $signature_fpr == "" then null else $signature_fpr end)},
+          source: {url: $source_url, sha256: $source_sha256, signed_by: $signature_fpr},
           target: $target,
           linkage: $linkage,
           tools: ($tools | split(" ") | map(. + ".exe")),
@@ -338,7 +304,7 @@ write_manifest() {
         "",
         "Source:      \(.source.url)",
         "SHA-256:     \(.source.sha256)",
-        "Signed by:   \(.source.signed_by // "not signature-checked")",
+        "Signed by:   \(.source.signed_by)",
         "Target:      \(.target)",
         "Tools:       \(.tools | join(", "))",
         "Built date:  \(.build_date)",
@@ -401,11 +367,9 @@ tools_name=${name}-windows-x64-static-tools
 log "Packaging ${static_name}.zip"
 d=${pkg_root}/${static_name}
 mkdir -p "${d}/bin" "${d}/lib"
-cp -r "${static_stage}/include" "${d}/include"
+cp -r "${static_stage}/include" "${static_stage}/share" "${d}/"
 cp "${static_stage}"/bin/*.exe "${d}/bin/"
-cp "${static_stage}/lib/libarchive.a" "${d}/lib/"
-[[ -d ${static_stage}/lib/pkgconfig ]] && cp -r "${static_stage}/lib/pkgconfig" "${d}/lib/"
-[[ -d ${static_stage}/share ]] && cp -r "${static_stage}/share" "${d}/share"
+cp -r "${static_stage}/lib/libarchive.a" "${static_stage}/lib/pkgconfig" "${d}/lib/"
 # The dependencies' static libraries, so libarchive.a can be linked without MXE.
 for lib in libz.a libbz2.a liblzma.a liblz4.a libzstd.a libcrypto.a libxml2.a libiconv.a libpcre2-8.a libpcre2-posix.a; do
     cp "${mxe_dir}/usr/${static_target}/lib/${lib}" "${d}/lib/" || die "static: ${lib} not found in MXE"
@@ -417,12 +381,10 @@ zip_dir "${d}" "${out_dir}/${static_name}.zip"
 log "Packaging ${shared_name}.zip"
 d=${pkg_root}/${shared_name}
 mkdir -p "${d}/bin" "${d}/lib"
-cp -r "${shared_stage}/include" "${d}/include"
+cp -r "${shared_stage}/include" "${shared_stage}/share" "${d}/"
 cp "${shared_stage}"/bin/*.exe "${shared_stage}"/bin/*.dll "${d}/bin/"
 for path in "${shared_dlls[@]}"; do [[ -e ${d}/bin/$(basename "${path}") ]] || cp "${path}" "${d}/bin/"; done
-cp "${shared_stage}"/lib/*.dll.a "${d}/lib/"
-[[ -d ${shared_stage}/lib/pkgconfig ]] && cp -r "${shared_stage}/lib/pkgconfig" "${d}/lib/"
-[[ -d ${shared_stage}/share ]] && cp -r "${shared_stage}/share" "${d}/share"
+cp -r "${shared_stage}"/lib/*.dll.a "${shared_stage}/lib/pkgconfig" "${d}/lib/"
 add_licences "${d}"
 write_manifest shared "${shared_target}" "${d}"
 zip_dir "${d}" "${out_dir}/${shared_name}.zip"
