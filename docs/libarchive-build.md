@@ -9,10 +9,10 @@ watch-upstream.yml (daily) ──► scripts/trigger-latest-release.sh
         │  latest libarchive release missing here?
         ▼
 mxe-image.yml (weekly, on mxe/ changes to main, or by hand)
-  └─ build mxe/Dockerfile ──► ghcr.io/<owner>/mxe-libarchive:sha-<commit>  (+ :latest from main)
+  └─ build mxe/Dockerfile ──► ghcr.io/<owner>/mxe-libarchive:sha-<commit> and :tree-<mxe/ tree>  (+ :latest from main)
 
 build-libarchive.yml (workflow_dispatch, version X.Y.Z [, mxe_image_commit])
-  ├─ version     validate X.Y.Z, pick :latest or :sha-<mxe_image_commit>
+  ├─ version     validate X.Y.Z, pick :tree-<mxe/ tree> or :sha-<mxe_image_commit>
   ├─ build       docker pull <image>; docker run <image> scripts/build-libarchive.sh X.Y.Z out   (ubuntu-latest)
   ├─ smoke-test  scripts/Test-LibarchivePackage.ps1 on windows-2022 and windows-2025, and in Nano Server
   └─ release     vX.Y.Z and static-X.Y.Z (default branch only)
@@ -24,7 +24,7 @@ Everything Linux runs on GitHub-hosted `ubuntu-latest` runners. Nothing runs on 
 | --- | --- |
 | `mxe/Dockerfile` | Ubuntu 24.04 (pinned by digest) with MXE pinned to a commit, building both targets and the dependencies. Adds yq, pinned by version and SHA-256, to read the build configuration. Runs as the non-root user `mxe` (uid 1001). |
 | `mxe/record-mxe-info.sh` | Writes `/opt/mxe/mxe-info.json` (MXE commit and package versions), and copies licences to `/opt/mxe/licenses` and the libiconv source to `/opt/mxe/sources`. |
-| `scripts/mxe-image-tag.sh` | Prints the image reference: `ghcr.io/<owner>/mxe-libarchive:latest`, or `:sha-<full SHA>` for a commit given as its argument. |
+| `scripts/mxe-image-tag.sh` | Prints the image reference: `ghcr.io/<owner>/mxe-libarchive:tree-<hash>` for the `mxe/` in this checkout (or `--tree <commit>`), `:sha-<full SHA>` for a commit given as its argument, or `--latest`. |
 | `scripts/build-libarchive.sh` | Downloads, verifies, configures, builds, validates and packages one release. |
 | `scripts/build-libarchive.yaml` | What every release is built with: the tools, the CMake options for each variant (`-D<name>=<value>`), and the `config.h` defines that must be set. The script reads it with yq. |
 | `scripts/Test-LibarchivePackage.ps1` | The Windows smoke test of one package. |
@@ -95,18 +95,20 @@ gh run watch --repo zippy1981/windows-nano-baseimages
 gh release view v3.8.11 --repo zippy1981/windows-nano-baseimages
 ```
 
-The build never builds MXE. It pulls `:latest`, so run `mxe-image.yml` on `main` once (about an hour) before the first build, and again after any change you don't want to wait a week for. A dispatch from another branch builds and tests, but doesn't publish. A push that touches the build or test scripts, `keys/` or `build-libarchive.yml` runs a test build of `TEST_VERSION` (set in `build-libarchive.yml`). The release notes and the run summary record the image digest and the commit it was built from.
+The build never builds MXE. It pulls `:tree-<hash>`, the newest image built from the git tree of `mxe/` in its own checkout ([ADR 0011](adr/0011-pull-the-mxe-image-by-the-tree-hash-of-mxe.md)), so it always gets the image its `mxe/` describes, and a rebase or squash merge doesn't change the tag. Run `mxe-image.yml` on `main` once (about an hour) before the first build. A branch that changes `mxe/` must run it on that branch too, before its builds pass; the same tag then serves `main` after the merge. A dispatch from another branch builds and tests, but doesn't publish. A push that touches `mxe/`, the build or test scripts, `keys/` or `build-libarchive.yml` runs a test build of `TEST_VERSION` (set in `build-libarchive.yml`). The release notes and the run summary record the image digest and the commit it was built from.
 
-To build with a particular image instead of `:latest`, pass the commit of this repo that the image was built from. Every `mxe-image.yml` run tags its image `sha-<commit>`, including runs on other branches, so this is also how to try a Dockerfile change before it merges:
+To try a Dockerfile change, build its image on the branch, then rerun the branch's libarchive build:
 
 ```bash
 gh workflow run mxe-image.yml --repo zippy1981/windows-nano-baseimages --ref my-branch
-gh workflow run build-libarchive.yml --repo zippy1981/windows-nano-baseimages --ref my-branch -f version=3.8.11 -f mxe_image_commit=<commit>
+gh workflow run build-libarchive.yml --repo zippy1981/windows-nano-baseimages --ref my-branch -f version=3.8.11
 ```
+
+To build with a particular image instead, pass the commit of this repo that the image was built from, as `-f mxe_image_commit=<commit>`. Every `mxe-image.yml` run tags its image `sha-<commit>`, including runs on other branches.
 
 ### Locally, on Linux
 
-Build the image (about an hour), or pull the published one (`:latest`, or `scripts/mxe-image-tag.sh <commit>` for a pinned one):
+Build the image (about an hour), or pull the published one for your checkout's `mxe/` (`scripts/mxe-image-tag.sh`; `scripts/mxe-image-tag.sh <commit>` for a pinned one):
 
 ```bash
 docker build --tag mxe-libarchive:local mxe
@@ -130,7 +132,7 @@ With **Docker** (rootful, the usual install):
 docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/work:z" mxe-libarchive:local scripts/build-libarchive.sh 3.8.11 out
 ```
 
-For a shell in the container instead, drop the script and add `-it` (for example `podman run --rm -it --userns=keep-id:uid=1001,gid=1001 --volume "$PWD:/work:z" mxe-libarchive:local`). Use the published image's name (`ghcr.io/zippy1981/mxe-libarchive:latest`) in place of `mxe-libarchive:local` if you pulled it.
+For a shell in the container instead, drop the script and add `-it` (for example `podman run --rm -it --userns=keep-id:uid=1001,gid=1001 --volume "$PWD:/work:z" mxe-libarchive:local`). Use the published image's name (`"$(scripts/mxe-image-tag.sh)"`) in place of `mxe-libarchive:local` if you pulled it.
 
 Why each part is there:
 
@@ -183,7 +185,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 
 | Symptom | Cause and fix |
 | --- | --- |
-| `build` can't pull the MXE image | No `mxe-image.yml` run has pushed that tag yet. Run it on `main` for `:latest`, or on the commit you passed as `mxe_image_commit`. |
+| `build` can't pull the MXE image | No `mxe-image.yml` run has pushed that tag yet. Run it on the branch whose `mxe/` the build uses (`tree-` tag), or on the commit you passed as `mxe_image_commit`. |
 | `mxe-image.yml` hits its 350-minute timeout | MXE grew. Split `mxe/Dockerfile` into a toolchain stage and a packages stage, each pushed as its own tag. |
 | An MXE package fails to download | Its upstream moved. Bump `MXE_COMMIT` to a commit with the fix; the `mxe-build-log` artifact has the log. |
 | `features not found by CMake: HAVE_...` | A dependency failed to link in a CMake check. Read `configure-<variant>.log` in the `libarchive-X.Y.Z-logs` artifact. |

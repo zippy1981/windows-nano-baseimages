@@ -1,10 +1,11 @@
 # Builds the MXE cross-compile image (mxe/Dockerfile) on a GitHub-hosted runner and pushes it to GHCR as
-# ghcr.io/<owner>/mxe-libarchive:sha-<commit>, and also as :latest when it builds the default branch.
-# build-libarchive.yml never builds MXE: it pulls :latest, or the sha-<commit> tag a manual run names.
+# ghcr.io/<owner>/mxe-libarchive:sha-<commit> and :tree-<git tree hash of mxe/>, and also as :latest when
+# it builds the default branch. build-libarchive.yml never builds MXE: it pulls the tree- tag for the mxe/
+# in its checkout, or the sha-<commit> tag a manual run names (docs/adr/0011).
 #
 # Runs weekly (so the image picks up Ubuntu's security updates), on a push to the default branch that
-# changes mxe/, and by hand on any branch. A run on another branch pushes only its sha-<commit> tag, so a
-# Dockerfile change can be tried with build-libarchive.yml's mxe_image_commit input before it merges.
+# changes mxe/, and by hand on any branch. Run it by hand on a branch that changes mxe/, so that branch's
+# libarchive builds find their tree- tag; the same tag then serves the branch after it merges.
 name: MXE image
 
 on:
@@ -49,15 +50,19 @@ jobs:
           DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
         run: |
           image=$(scripts/mxe-image-tag.sh "${GITHUB_SHA}")
+          tree=$(scripts/mxe-image-tag.sh --tree "${GITHUB_SHA}")
           latest=
           if [[ ${REF} == "${DEFAULT_REF}" ]]; then
-            latest=$(scripts/mxe-image-tag.sh)
+            latest=$(scripts/mxe-image-tag.sh --latest)
           else
             echo "::notice::${REF} is not the default branch, so :latest is left alone."
           fi
-          echo "image=${image}" >>"${GITHUB_OUTPUT}"
-          echo "latest=${latest}" >>"${GITHUB_OUTPUT}"
-          echo "MXE image: ${image}${latest:+ and ${latest}}" >>"${GITHUB_STEP_SUMMARY}"
+          {
+            echo "image=${image}"
+            echo "tree=${tree}"
+            echo "latest=${latest}"
+          } >>"${GITHUB_OUTPUT}"
+          echo "MXE image: ${image}, ${tree}${latest:+ and ${latest}}" >>"${GITHUB_STEP_SUMMARY}"
 
       - name: Log in to GHCR
         env:
@@ -125,13 +130,16 @@ jobs:
           ' | tee -a "${GITHUB_STEP_SUMMARY}"
           docker image ls "${IMAGE}"
 
-      # :latest moves only after the sha- tag is pushed and the toolchain check has passed.
+      # The tree- and latest tags move only after the sha- tag is pushed and the toolchain check has passed.
       - name: Push the MXE image
         env:
           IMAGE: ${{ steps.tag.outputs.image }}
+          TREE: ${{ steps.tag.outputs.tree }}
           LATEST: ${{ steps.tag.outputs.latest }}
         run: |
           docker push "${IMAGE}"
+          docker tag "${IMAGE}" "${TREE}"
+          docker push "${TREE}"
           if [[ -n ${LATEST} ]]; then
             docker tag "${IMAGE}" "${LATEST}"
             docker push "${LATEST}"
