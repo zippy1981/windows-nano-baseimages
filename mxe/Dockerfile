@@ -25,12 +25,19 @@ ARG MXE_COMMIT=a6738d9d9f0723c04a26324655f42c8063359837
 #   --build-arg MXE_PACKAGES="cc zlib bzip2 xz lz4 zstd openssl expat libxml2 libiconv pcre2"
 ARG MXE_PACKAGES="cc zlib bzip2 xz lz4 zstd openssl expat libxml2 libiconv pcre2"
 
+# The yq release scripts/build-libarchive.sh reads its configuration with (mikefarah/yq v4,
+# https://github.com/mikefarah/yq/releases), and the SHA-256 of its yq_linux_amd64 from that release's
+# checksums file (the SHA-256 column, named in checksums_hashes_order).
+#   --build-arg YQ_VERSION=4.54.1 --build-arg YQ_SHA256=8e34fc298390875de416e6a4afcb8cabeceb25d9aa8506c1a2f9353cf702ea5f
+ARG YQ_VERSION=4.54.1
+ARG YQ_SHA256=8e34fc298390875de416e6a4afcb8cabeceb25d9aa8506c1a2f9353cf702ea5f
+
 # Parallel make jobs inside each MXE package build (MXE's JOBS). Defaults to the number of CPUs.
 #   --build-arg MXE_JOBS=4
 ARG MXE_JOBS=
 
 # MXE's documented Debian and Ubuntu requirements (https://mxe.cc/#requirements-debian), plus what
-# scripts/build-libarchive.sh needs: cmake, file, gpgv, jq, zip and curl.
+# scripts/build-libarchive.sh needs: cmake, file, gpgv, jq, zip and curl (and yq, below).
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       autoconf automake autopoint bash bison bzip2 ca-certificates clang cmake curl file flex g++ \
@@ -40,6 +47,15 @@ RUN apt-get update \
       python3-mako python3-packaging python3-pkg-resources python3-setuptools python3-yaml \
       python-is-python3 ruby sed sqlite3 unzip wget xz-utils zip \
  && rm -rf /var/lib/apt/lists/*
+
+# yq for scripts/build-libarchive.sh, pinned by version and SHA-256. It is MIT-licensed, and only builds;
+# nothing from it ships in the libarchive packages.
+RUN curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --retry 5 \
+      --output /usr/local/bin/yq \
+      "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
+ && echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum --check --strict \
+ && chmod 0755 /usr/local/bin/yq \
+ && yq --version
 
 # uid 1001 matches the "runner" user on GitHub-hosted Ubuntu runners, so a bind-mounted workspace is writable.
 RUN groupadd --gid 1001 mxe \

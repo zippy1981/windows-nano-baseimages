@@ -8,9 +8,11 @@
 # A push that changes the build (the build and test scripts, the keys or this workflow) runs a test build
 # of TEST_VERSION with the same build and tests, and publishes nothing.
 #
-# This workflow never builds MXE. It pulls ghcr.io/<owner>/mxe-libarchive:latest, which mxe-image.yml
-# rebuilds weekly and when mxe/ changes on the default branch. A manual run can pin the image with
-# mxe_image_commit, the commit of this repo whose mxe-image.yml run built it (tag sha-<commit>).
+# This workflow never builds MXE. It pulls ghcr.io/<owner>/mxe-libarchive:tree-<git tree hash of mxe/>,
+# the newest image mxe-image.yml built from the mxe/ in this checkout (docs/adr/0011). mxe-image.yml
+# rebuilds the default branch's weekly and when mxe/ changes there; a branch that changes mxe/ runs it by
+# hand. A manual run can pin the image with mxe_image_commit, the commit of this repo whose mxe-image.yml
+# run built it (tag sha-<commit>).
 name: Build libarchive
 run-name: >-
   ${{ github.event_name == 'workflow_dispatch'
@@ -27,7 +29,8 @@ on:
       mxe_image_commit:
         description: >-
           Optional. Build with the MXE image made from this commit of this repo (sha-<commit>) instead of
-          :latest. Any commit name git resolves here: a SHA, short SHA, branch or tag.
+          the one for this checkout's mxe/ (tree-<hash>). Any commit name git resolves here: a SHA, short
+          SHA, branch or tag.
         required: false
         type: string
         default: ''
@@ -35,7 +38,9 @@ on:
     paths:
       - keys/**
       - scripts/build-libarchive.sh
+      - scripts/build-libarchive.yaml
       - scripts/mxe-image-tag.sh
+      - mxe/**
       - scripts/Test-LibarchivePackage.ps1
       - .github/workflows/build-libarchive.yml
 
@@ -122,7 +127,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Records the digest and the commit the image was built from, since :latest moves.
+      # Records the digest and the commit the image was built from, since the tree- tag moves.
       - name: Pull the MXE image
         id: pull
         env:
@@ -131,7 +136,7 @@ jobs:
         run: |
           echo "${GHCR_TOKEN}" | docker login ghcr.io --username "${ACTOR}" --password-stdin
           if ! docker pull --quiet "${IMAGE}"; then
-            echo "::error::Could not pull ${IMAGE}. Run the 'MXE image' workflow (mxe-image.yml) to build it: on the default branch for :latest, or on the commit you pinned with mxe_image_commit."
+            echo "::error::Could not pull ${IMAGE}. Run the 'MXE image' workflow (mxe-image.yml) to build it: on this branch for the tree- tag of its mxe/ (about an hour), or on the commit you pinned with mxe_image_commit."
             exit 1
           fi
           docker logout ghcr.io

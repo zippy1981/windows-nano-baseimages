@@ -4,6 +4,7 @@
 - Date: 2026-11-06
 - Deciders: zippy1981
 - Supersedes: the image tagging and the `build-libarchive.yml` → `mxe-image.yml` call in [0002](0002-build-mxe-on-hosted-runners-and-cache-in-ghcr.md)
+- Superseded in part by: [0011](0011-pull-the-mxe-image-by-the-tree-hash-of-mxe.md), for the image `build-libarchive.yml` pulls by default
 - Related: `.github/workflows/mxe-image.yml`, `.github/workflows/build-libarchive.yml`, `scripts/mxe-image-tag.sh`
 
 ## Context

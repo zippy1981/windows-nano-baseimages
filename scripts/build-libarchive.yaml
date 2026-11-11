@@ -1,0 +1,93 @@
+# build-libarchive.yaml: what scripts/build-libarchive.sh builds. Every libarchive release uses these
+# same settings. The script reads this file with yq (mikefarah/yq v4, in the mxe-libarchive image).
+#
+# Each entry under cmake is passed to CMake as -D<name>=<value>, in the order written here: common to
+# both variants, then the variant's own. Quote values, so YAML never turns ON or OFF into a boolean.
+# A change here changes the build: the push trigger in .github/workflows/build-libarchive.yml covers it.
+
+# The command-line tools every release builds. Each must exist in both variants.
+tools: [bsdtar, bsdcpio, bsdcat, bsdunzip]
+
+# config.h defines that must be set after configuring; the build fails if one is missing.
+required_defines:
+  - HAVE_ZLIB_H
+  - HAVE_LIBZ
+  - HAVE_BZLIB_H
+  - HAVE_LIBBZ2
+  - HAVE_LZMA_H
+  - HAVE_LIBLZMA
+  - HAVE_LZ4_H
+  - HAVE_LIBLZ4
+  - HAVE_ZSTD_H
+  - HAVE_LIBZSTD
+  - HAVE_OPENSSL_EVP_H
+  - HAVE_LIBCRYPTO
+  - HAVE_LIBXML2
+  - HAVE_LIBXML_XMLREADER_H
+  - HAVE_ICONV
+  - HAVE_PCRE2POSIX_H
+  - HAVE_BCRYPT_H
+
+# Reported in the manifest, not required: libb2 is not in MXE, so libarchive uses its bundled BLAKE2.
+optional_defines: [HAVE_LIBB2, HAVE_BLAKE2_H, HAVE_LIBXMLLITE, HAVE_LIBEXPAT, HAVE_LZO_LZOCONF_H]
+
+cmake:
+  common:
+    CMAKE_BUILD_TYPE: "Release"
+    ENABLE_INSTALL: "ON"
+    # The MXE toolchain then calls the real compilers in usr/bin, not ccache wrappers.
+    MXE_USE_CCACHE: "OFF"
+    # The external libraries we link. Archive formats (tar, cpio, zip, 7-Zip, RAR and RAR5 reading,
+    # ISO9660, XAR, WARC, CAB, LHA, ar, mtree, shar) are built in; they have no CMake switches.
+    ENABLE_ZLIB: "ON"
+    ENABLE_BZip2: "ON"
+    ENABLE_LZMA: "ON"
+    ENABLE_LZ4: "ON"
+    ENABLE_ZSTD: "ON"
+    ENABLE_OPENSSL: "ON"
+    ENABLE_CNG: "ON"
+    ENABLE_LIBXML2: "ON"
+    ENABLE_ICONV: "ON"
+    ENABLE_PCRE2POSIX: "ON"
+    ENABLE_LIBB2: "ON"
+    ENABLE_TAR: "ON"
+    ENABLE_CPIO: "ON"
+    ENABLE_CAT: "ON"
+    ENABLE_UNZIP: "ON"
+    ENABLE_MD: "ON"
+    # Left out on purpose (docs/adr/0004-libarchive-feature-set.md): LZO is GPL-2.0, mbedTLS and Nettle
+    # duplicate OpenSSL, PCRE (1) is superseded by PCRE2, Expat is redundant with libxml2, ACLs and
+    # extended attributes are POSIX features, and the tests need Windows to run.
+    ENABLE_LZO: "OFF"
+    ENABLE_MBEDTLS: "OFF"
+    ENABLE_NETTLE: "OFF"
+    ENABLE_PCREPOSIX: "OFF"
+    ENABLE_EXPAT: "OFF"
+    ENABLE_BSDXML: "OFF"
+    ENABLE_ACL: "OFF"
+    ENABLE_XATTR: "OFF"
+    ENABLE_TEST: "OFF"
+    ENABLE_COVERAGE: "OFF"
+    ENABLE_WERROR: "OFF"
+    ENABLE_CLANG_TIDY: "OFF"
+
+  static:
+    BUILD_SHARED_LIBS: "OFF"
+    # Static links of OpenSSL and libxml2 need these after them on the link line; the standard
+    # libraries come last, so they resolve what the static archives leave open.
+    CMAKE_C_STANDARD_LIBRARIES: "-liconv -llzma -lz -lbcrypt -lcrypt32 -lws2_32 -luser32 -ladvapi32 -lshell32 -lole32 -lkernel32"
+    # libarchive's LIBXML_STATIC probe only compiles, so it misses that MXE's libxml2 is static and the
+    # XAR code then expects __imp_xml* DLL imports. Define it for the static variant.
+    CMAKE_C_FLAGS: "-DLIBXML_STATIC"
+    ENABLE_TAR_SHARED: "OFF"
+    ENABLE_CPIO_SHARED: "OFF"
+    ENABLE_CAT_SHARED: "OFF"
+    ENABLE_UNZIP_SHARED: "OFF"
+
+  shared:
+    BUILD_SHARED_LIBS: "ON"
+    # The tools link libarchive.dll.
+    ENABLE_TAR_SHARED: "ON"
+    ENABLE_CPIO_SHARED: "ON"
+    ENABLE_CAT_SHARED: "ON"
+    ENABLE_UNZIP_SHARED: "ON"
