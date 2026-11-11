@@ -10,10 +10,14 @@
     - bsdtar writes, lists and extracts an archive in each format and filter (gzip, bzip2, xz, zstd,
       lz4, zip, AES-256 encrypted zip, 7-Zip, XAR, cpio, ISO9660, ustar, pax), and the extracted files
       match the originals byte for byte.
+    - bsdtar extracts the zip it wrote through a real pipe (curl file:///... | bsdtar -x -f -) with
+      nothing missing (issue 8).
+    - bsdtar decodes the Deflate64 entries of tests/fixtures/zip-deflate64.zip, from a file and from a
+      pipe (issue 7).
     - bsdcpio, bsdcat and (when packaged) bsdunzip run.
 
     With -NanoServerImage it also runs bsdtar inside that Nano Server container, with process
-    isolation, which checks the tools need nothing Nano Server lacks.
+    isolation, which checks the tools need nothing Nano Server lacks, including the piped zip.
 
 .PARAMETER PackagePath
     The package zip.
@@ -76,6 +80,12 @@ function Get-TreeHash {
     }
 }
 
+function ConvertTo-FileUrl {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)] [string] $Path)
+    'file:///' + ($Path -replace '\\', '/')
+}
+
 $work = Join-Path $WorkDirectory ('libarchive-test-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work | Out-Null
 $savedPath = $env:PATH
@@ -97,7 +107,7 @@ try {
 
     $versionText = (Invoke-Tool $tar '--version') -join ' '
     Write-Output "bsdtar --version: $versionText"
-    foreach ($needle in @("libarchive $ExpectedVersion", 'zlib/', 'liblzma/', 'bz2lib/', 'liblz4/', 'libzstd/')) {
+    foreach ($needle in @("libarchive $ExpectedVersion", 'zlib/', 'liblzma/', 'bz2lib/', 'liblz4/', 'libzstd/', 'inflatelib/')) {
         if ($versionText -notlike "*$needle*") { $failures.Add("bsdtar --version lacks '$needle'") }
     }
 
@@ -150,6 +160,53 @@ try {
         }
     }
 
+    # curl writes to a real pipe; PowerShell's own pipeline would re-encode the bytes.
+    $curl = Join-Path $env:SystemRoot 'System32\curl.exe'
+    $cmdExe = Join-Path $env:SystemRoot 'System32\cmd.exe'
+
+    # Issue 8: libarchive on Windows used to drop the first ~64 KB of a zip read from a pipe, and
+    # exit 0. Extract the zip written above through a pipe and compare every file.
+    $pipeOut = Join-Path $work 'out-pipe'
+    New-Item -ItemType Directory -Path $pipeOut | Out-Null
+    $pipeCmd = Join-Path $work 'pipe.cmd'
+    Set-Content -LiteralPath $pipeCmd -Encoding ascii -Value (@(
+            '@echo off'
+            ('"{0}" -fsS {1} | "{2}" -x -f - -C "{3}"' -f $curl, (ConvertTo-FileUrl (Join-Path $work 'test.zip')), $tar, $pipeOut)
+        ) -join "`r`n")
+    try {
+        Invoke-Tool $cmdExe @('/D', '/C', $pipeCmd) | Out-Null
+        if (Compare-Object $expected (Get-TreeHash $pipeOut)) {
+            $failures.Add('zip from a pipe: extracted files differ from the originals (issue 8)')
+        }
+        else {
+            Write-Output 'ok   zip from a pipe'
+        }
+    }
+    catch {
+        $failures.Add("zip from a pipe: $($_.Exception.Message)")
+    }
+
+    # Issue 7: Deflate64 (zip method 9). bsdtar can't write it, so the fixture comes from libarchive's tests.
+    $deflate64 = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\tests\fixtures\zip-deflate64.zip')).Path
+    $deflate64Entry = 'xyzxyzxyzxyzxyzxyzxyzxyzxyzxyz/abcabcabcabcabcabcabcabcabcabc.txt'
+    $deflate64Text = 'abc' * 10
+    $deflate64Cmd = Join-Path $work 'deflate64.cmd'
+    Set-Content -LiteralPath $deflate64Cmd -Encoding ascii -Value (@(
+            '@echo off'
+            ('"{0}" -fsS {1} | "{2}" -x -O -f - {3}' -f $curl, (ConvertTo-FileUrl $deflate64), $tar, $deflate64Entry)
+        ) -join "`r`n")
+    foreach ($mode in 'file', 'pipe') {
+        try {
+            if ($mode -eq 'file') { $text = (Invoke-Tool $tar @('-x', '-O', '-f', $deflate64, $deflate64Entry)) -join '' }
+            else { $text = (Invoke-Tool $cmdExe @('/D', '/C', $deflate64Cmd)) -join '' }
+            if ($text -ne $deflate64Text) { $failures.Add("Deflate64 from a ${mode}: printed '$text'") }
+            else { Write-Output "ok   Deflate64 from a $mode" }
+        }
+        catch {
+            $failures.Add("Deflate64 from a ${mode}: $($_.Exception.Message)")
+        }
+    }
+
     foreach ($tool in 'bsdcpio', 'bsdcat', 'bsdunzip') {
         $exe = Join-Path $binDir "$tool.exe"
         if (-not (Test-Path -LiteralPath $exe)) {
@@ -183,8 +240,10 @@ try {
             'C:\pkg\bsdtar.exe -x -f C:\work\nano.tar.zst -C C:\work\nano-out || exit /b 3'
             'C:\pkg\bsdtar.exe -c -f C:\work\nano.7z --format 7zip -C C:\work\data . || exit /b 4'
             'C:\pkg\bsdtar.exe -t -f C:\work\nano.7z || exit /b 5'
+            'curl.exe -fsS file:///C:/work/test.zip | C:\pkg\bsdtar.exe -x -f - -C C:\work\nano-pipe || exit /b 6'
         ) -join "`r`n"
         New-Item -ItemType Directory -Path (Join-Path $work 'nano-out') | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $work 'nano-pipe') | Out-Null
         Set-Content -LiteralPath (Join-Path $work 'nano.cmd') -Value $script -Encoding ascii
         $dockerArgs = @('run', '--rm', '--isolation', 'process', '--user', 'ContainerAdministrator', '-v', "${binDir}:C:\pkg:ro", '-v', "${work}:C:\work",
             $NanoServerImage, 'cmd', '/S', '/C', 'C:\work\nano.cmd')
@@ -192,6 +251,9 @@ try {
             Invoke-Tool 'docker' $dockerArgs | ForEach-Object { Write-Output "  $_" }
             if (Compare-Object $expected (Get-TreeHash (Join-Path $work 'nano-out'))) {
                 $failures.Add('Nano Server: extracted files differ from the originals')
+            }
+            elseif (Compare-Object $expected (Get-TreeHash (Join-Path $work 'nano-pipe'))) {
+                $failures.Add('Nano Server: the zip extracted from a pipe differs from the originals (issue 8)')
             }
             else {
                 Write-Output "ok   Nano Server ($NanoServerImage)"

@@ -8,6 +8,23 @@
 # The command-line tools every release builds. Each must exist in both variants.
 tools: [bsdtar, bsdcpio, bsdcat, bsdunzip]
 
+# Patches applied to the release source, in order, with patch -p1 and no fuzz. Each file's header
+# says what it fixes and where it came from. A patch that no longer applies fails the build.
+patches:
+  # Deflate64 (zip method 9), issue 7: a port of libarchive/libarchive#2806.
+  - patches/libarchive/0001-zip-read-deflate64-with-inflatelib.patch
+  # Piped archives on Windows lose their first ~64 KB, issue 8.
+  - patches/libarchive/0002-windows-do-not-seek-pipes.patch
+
+# Microsoft's InflateLib (MIT), the Deflate64 decoder patch 0001 links. It's built as a static
+# library for each variant. Upstream publishes no checksums, so sha256 is of the tag tarball,
+# computed here; commit is what the tag pointed at.
+inflatelib:
+  version: "0.3.0"
+  commit: a1e25383e7bf4ebbcd62d82f68571795e6f5b9ec
+  url: https://github.com/microsoft/inflatelib/archive/refs/tags/v0.3.0.tar.gz
+  sha256: 685bee8f74571cf26f0d30f6718a9f3ccdcbcfb8c1342f6fbba6304e35dbc426
+
 # config.h defines that must be set after configuring; the build fails if one is missing.
 required_defines:
   - HAVE_ZLIB_H
@@ -27,6 +44,7 @@ required_defines:
   - HAVE_ICONV
   - HAVE_PCRE2POSIX_H
   - HAVE_BCRYPT_H
+  - HAVE_INFLATELIB_H
 
 # Reported in the manifest, not required: libb2 is not in MXE, so libarchive uses its bundled BLAKE2.
 optional_defines: [HAVE_LIBB2, HAVE_BLAKE2_H, HAVE_LIBXMLLITE, HAVE_LIBEXPAT, HAVE_LZO_LZOCONF_H]
@@ -55,6 +73,8 @@ cmake:
     ENABLE_CAT: "ON"
     ENABLE_UNZIP: "ON"
     ENABLE_MD: "ON"
+    # Added by patch 0001. The script points inflatelib_DIR at the variant's InflateLib build.
+    ENABLE_INFLATELIB: "ON"
     # Left out on purpose (docs/adr/0004-libarchive-feature-set.md): LZO is GPL-2.0, mbedTLS and Nettle
     # duplicate OpenSSL, PCRE (1) is superseded by PCRE2, Expat is redundant with libxml2, ACLs and
     # extended attributes are POSIX features, and the tests need Windows to run.

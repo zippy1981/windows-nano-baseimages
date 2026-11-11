@@ -26,7 +26,9 @@ Everything Linux runs on GitHub-hosted `ubuntu-latest` runners. Nothing runs on 
 | `mxe/record-mxe-info.sh` | Writes `/opt/mxe/mxe-info.json` (MXE commit and package versions), and copies licences to `/opt/mxe/licenses` and the libiconv source to `/opt/mxe/sources`. |
 | `scripts/mxe-image-tag.sh` | Prints the image reference: `ghcr.io/<owner>/mxe-libarchive:tree-<hash>` for the `mxe/` in this checkout (or `--tree <commit>`), `:sha-<full SHA>` for a commit given as its argument, or `--latest`. |
 | `scripts/build-libarchive.sh` | Downloads, verifies, configures, builds, validates and packages one release. |
-| `scripts/build-libarchive.yaml` | What every release is built with: the tools, the CMake options for each variant (`-D<name>=<value>`), and the `config.h` defines that must be set. The script reads it with yq. |
+| `scripts/build-libarchive.yaml` | What every release is built with: the tools, the patches, the InflateLib pin, the CMake options for each variant (`-D<name>=<value>`), and the `config.h` defines that must be set. The script reads it with yq. |
+| `patches/libarchive/` | Patches applied to every release (ADR 0012); see [Patches](#patches). |
+| `tests/fixtures/` | Archives the smoke test needs but bsdtar can't write, such as a Deflate64 zip. |
 | `scripts/Test-LibarchivePackage.ps1` | The Windows smoke test of one package. |
 | `scripts/trigger-latest-release.sh` | The upstream check and dispatch. |
 | `keys/libarchive-release-keys.asc` | The OpenPGP keys libarchive releases are signed with. |
@@ -45,6 +47,7 @@ The image builds MXE's `x86_64-w64-mingw32.static` and `x86_64-w64-mingw32.share
 | --- | --- | --- |
 | tar, pax, cpio, zip, 7-Zip, RAR and RAR5 (read), ISO9660, XAR, WARC, CAB, LHA, ar, mtree, shar, raw | Built into libarchive | On |
 | gzip / deflate | zlib, `ENABLE_ZLIB` | On, required |
+| Deflate64 (zip method 9) | InflateLib, `ENABLE_INFLATELIB` (added by patch 0001) | On, required |
 | bzip2 | `ENABLE_BZip2` | On, required |
 | xz / LZMA | `ENABLE_LZMA` | On, required |
 | LZ4 | `ENABLE_LZ4` | On, required |
@@ -58,6 +61,19 @@ The image builds MXE's `x86_64-w64-mingw32.static` and `x86_64-w64-mingw32.share
 | mbedTLS, Nettle | `ENABLE_MBEDTLS`, `ENABLE_NETTLE` | Off: OpenSSL and CNG cover them |
 | Expat, bsdxml | `ENABLE_EXPAT`, `ENABLE_BSDXML` | Off: libxml2 is used |
 | ACLs, extended attributes | `ENABLE_ACL`, `ENABLE_XATTR` | Off: POSIX only |
+
+### Patches
+
+`scripts/build-libarchive.sh` applies the patches listed in `scripts/build-libarchive.yaml` to the release source, in order, with `patch -p1` and no fuzz; one that doesn't apply fails the build ([ADR 0012](adr/0012-carry-patches-on-libarchive-releases.md)). Each file's header says what it fixes and where it came from. Every package lists them, with their SHA-256, in its manifest, and ships them in `sources/patches/`.
+
+| Patch | Fixes | Source |
+| --- | --- | --- |
+| `0001-zip-read-deflate64-with-inflatelib.patch` | Deflate64 zips fail with `Unsupported ZIP compression method (9: deflation-64-bit)` ([#7](https://github.com/zippy1981/windows-nano-baseimages/issues/7)) | A port of [libarchive#2806](https://github.com/libarchive/libarchive/pull/2806) to 3.8.11 |
+| `0002-windows-do-not-seek-pipes.patch` | On Windows, a zip read from a pipe loses its first ~64 KB and bsdtar exits 0 ([#8](https://github.com/zippy1981/windows-nano-baseimages/issues/8)) | Written here: the seek callbacks refuse to seek a handle that isn't a disk file |
+
+Patch 0001 links [InflateLib](https://github.com/microsoft/inflatelib) (MIT), which the script downloads from a pinned tag (version, commit and SHA-256 in the YAML file; upstream publishes no checksums), builds as a static library for each variant, and ships as `lib/libinflatelib.a` in the static package and `licenses/inflatelib/` in every package. `bsdtar --version` lists `inflatelib/<version>`.
+
+To refresh a patch for a new libarchive release, apply it to the new source with `patch -p1 --fuzz=0`, fix what fails, and regenerate it with `git diff`, keeping the header. Drop a patch once upstream ships the fix.
 
 "Required" means `build-libarchive.sh` fails if the matching `config.h` define (for example `HAVE_ZSTD_H` and `HAVE_LIBZSTD`) is not set after configuring. Every release gets the same CMake options, tools and `config.h` checks, from `scripts/build-libarchive.yaml`: libarchive has kept its `ENABLE_*` options stable across releases, and if a release drops or renames one, its configure or feature check fails and the YAML file is changed.
 
@@ -190,6 +206,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 | An MXE package fails to download | Its upstream moved. Bump `MXE_COMMIT` to a commit with the fix; the `mxe-build-log` artifact has the log. |
 | `features not found by CMake: HAVE_...` | A dependency failed to link in a CMake check. Read `configure-<variant>.log` in the `libarchive-X.Y.Z-logs` artifact. |
 | `imports X.dll, which is not a Windows system DLL` | A static tool linked a DLL. Check the static libraries in MXE, or the `system_dll_re` allowlist if the DLL is a genuine Windows one. |
+| `<patch> does not apply to X.Y.Z` | The release changed the code a patch touches. Port the patch (see [Patches](#patches)), or drop it if upstream fixed the bug. |
 | `signature check failed` | A release was signed with a new key. Confirm it on libarchive's release page, then add it to `keys/libarchive-release-keys.asc`. |
 | The smoke test's Nano Server check is skipped | The runner image has no Docker, or the pull failed. The tool tests on the host still ran. |
 | The watcher says the workflow is not on the default branch | Merge the workflows to `main` first. |
@@ -197,7 +214,7 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 
 ## Security
 
-- Release tarballs are verified with `gpgv` against the committed keyring, and the tarball must contain only `libarchive-X.Y.Z/` with a matching `archive.h` version.
+- Release tarballs are verified with `gpgv` against the committed keyring, and the tarball must contain only `libarchive-X.Y.Z/` with a matching `archive.h` version. The InflateLib tarball is checked against its pinned SHA-256.
 - The Ubuntu base is pinned by digest, MXE by commit, and yq by version and SHA-256. MXE checks each package download against the SHA-256 in its recipe.
 - The image runs as a non-root user and holds no credentials. The GHCR login uses `GITHUB_TOKEN` and is logged out after the pull.
 - The version input is validated as `X.Y.Z` before use, and reaches shell steps only through `env:`.
@@ -208,5 +225,6 @@ No secrets beyond the automatic `GITHUB_TOKEN` are needed. A dispatch made with 
 - **The self-hosted runner and `Run-MxeRunner.ps1` from issue #1 are not implemented.** Builds use hosted runners instead (ADR 0002); add them only if a persistent runner is wanted.
 - **ltsc2019 isn't tested here.** Hosted runners have no Server 2019 image. The tools import only system DLLs and `msvcrt.dll`, which ltsc2019 has; the Nano Server images test them on ltsc2019.
 - **libarchive's own test suite doesn't run**, because it needs Windows. The smoke tests cover each format and filter instead.
+- **The pipe fix (patch 0002) can only be tested on Windows.** Wine's `lseek` already fails on pipes, so a Linux test run can't show the bug; the smoke test's `zip from a pipe` check on the Windows runners and in Nano Server does.
 - **`bsdtar --version` doesn't list OpenSSL.** It lists zlib, liblzma, bz2lib, liblz4, libzstd, libxml2 and cng; the manifest's `config.h` features record OpenSSL. libarchive uses Windows CNG for its digests and zip encryption, and OpenSSL where CNG has no implementation.
 - **Only the latest upstream release is watched.** Older versions can be dispatched by hand. They get the same CMake options and must build the same four tools, so a release that lacks an option or `bsdunzip` fails the build.

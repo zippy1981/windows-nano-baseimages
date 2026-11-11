@@ -15,3 +15,4 @@ Add a decision as the next numbered `NNNN-title.md` file in this folder, in the 
 | 0009 | [The Visual C++ runtime is copied into System32 from the redistributable](0009-the-visual-cpp-runtime-is-copied-into-system32-from-the-redistributable.md) | Proposed | 2026-11-08 |
 | 0010 | [Route container work by probed host capabilities](0010-route-container-work-by-probed-host-capabilities.md) | Proposed | 2026-11-10 |
 | 0011 | [Pull the MXE image by the tree hash of mxe/](0011-pull-the-mxe-image-by-the-tree-hash-of-mxe.md) | Proposed | 2026-11-10 |
+| 0012 | [Carry patches on libarchive releases](0012-carry-patches-on-libarchive-releases.md) | Proposed | 2026-11-10 |

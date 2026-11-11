@@ -1,0 +1,388 @@
+Read Deflate64 (zip method 9) entries with Microsoft's InflateLib.
+
+Issue: https://github.com/zippy1981/windows-nano-baseimages/issues/7
+Upstream: libarchive has no Deflate64 decoder (libarchive/libarchive#2325, #2867).
+This is a port of the open upstream PR https://github.com/libarchive/libarchive/pull/2806
+(commit bc88f324db31, by the InflateLib authors) to libarchive 3.8.11, without its tests, vcpkg
+and autoconf changes. It adds ENABLE_INFLATELIB (off by default), finds inflatelib with
+find_package(inflatelib CONFIG), and decodes method 9 in the seekable and streaming zip readers,
+in symlink targets and in Mac metadata, the same way method 8 is decoded with zlib.
+Two changes from the PR: the Mac metadata path sets ret = ARCHIVE_FATAL on a decode error (as
+3.8.11's Deflate path does), and CreatePkgConfigFile.cmake writes the imported target
+inflatelib::inflatelib as -linflatelib instead of -linflatelib::inflatelib.
+
+InflateLib: https://github.com/microsoft/inflatelib (MIT), built by scripts/build-libarchive.sh.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1506586..fbb0f00 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -233,6 +233,8 @@ OPTION(ENABLE_ZSTD "Enable the use of the system zstd library if found" ON)
+ OPTION(ENABLE_ZLIB "Enable the use of the system ZLIB library if found" ON)
+ OPTION(ENABLE_BZip2 "Enable the use of the system BZip2 library if found" ON)
+ OPTION(ENABLE_LIBXML2 "Enable the use of the system libxml2 library if found" ON)
++# NOTE: Support is currently experimental, so disabled by default for now
++OPTION(ENABLE_INFLATELIB "Enable the use of the system InflateLib library if found" OFF)
+ OPTION(ENABLE_BSDXML "Enable the use of the system bsdxml library if found" ON)
+ OPTION(ENABLE_EXPAT "Enable the use of the system EXPAT library if found" ON)
+ OPTION(ENABLE_WIN32_XMLLITE "Enable the use of the Windows XmlLite library if found" ON)
+@@ -726,6 +728,21 @@ IF(ZSTD_FOUND)
+ ENDIF(ZSTD_FOUND)
+ MARK_AS_ADVANCED(CLEAR ZSTD_INCLUDE_DIR)
+ MARK_AS_ADVANCED(CLEAR ZSTD_LIBRARY)
++#
++# Find InflateLib
++#
++IF(ENABLE_INFLATELIB)
++  FIND_PACKAGE(inflatelib CONFIG REQUIRED)
++ELSE()
++  SET(inflatelib_FOUND FALSE) # Override cached value
++ENDIF()
++IF(inflatelib_FOUND)
++  SET(HAVE_INFLATELIB 1)
++  SET(HAVE_INFLATELIB_H 1)
++  LIST(APPEND ADDITIONAL_LIBS inflatelib::inflatelib)
++ENDIF(inflatelib_FOUND)
++MARK_AS_ADVANCED(CLEAR INFLATELIB_INCLUDE_DIR)
++MARK_AS_ADVANCED(CLEAR INFLATELIB_LIBRARY)
+ 
+ #
+ # Check headers
+diff --git a/build/cmake/CreatePkgConfigFile.cmake b/build/cmake/CreatePkgConfigFile.cmake
+index 50caa5e..980117d 100644
+--- a/build/cmake/CreatePkgConfigFile.cmake
++++ b/build/cmake/CreatePkgConfigFile.cmake
+@@ -9,6 +9,12 @@ SET(includedir \${prefix}/include)
+ # Now, this is not particularly pretty, nor is it terribly accurate...
+ # Loop over all our additional libs
+ FOREACH(mylib ${ADDITIONAL_LIBS})
++	# An imported target such as inflatelib::inflatelib links as -linflatelib
++	IF(mylib MATCHES "::")
++		STRING(REGEX REPLACE "^.*::" "" mylib_name ${mylib})
++		SET(LIBS "${LIBS} -l${mylib_name}")
++		CONTINUE()
++	ENDIF()
+ 	# Extract the filename from the absolute path
+ 	GET_FILENAME_COMPONENT(mylib_name ${mylib} NAME_WE)
+ 	# Strip the lib prefix
+diff --git a/build/cmake/config.h.in b/build/cmake/config.h.in
+index 720bfb8..2e45712 100644
+--- a/build/cmake/config.h.in
++++ b/build/cmake/config.h.in
+@@ -1341,6 +1341,9 @@ typedef uint64_t uintmax_t;
+ /* Define to 1 if you have the <zstd.h> header file. */
+ #cmakedefine HAVE_ZSTD_H 1
+ 
++/* Define to 1 if you have the <inflatelib.h> header file. */
++#cmakedefine HAVE_INFLATELIB_H 1
++
+ /* Define to 1 if you have the 'ctime_s' function. */
+ #cmakedefine HAVE_CTIME_S 1
+ 
+diff --git a/libarchive/archive.h b/libarchive/archive.h
+index 2c13908..2e5b7a6 100644
+--- a/libarchive/archive.h
++++ b/libarchive/archive.h
+@@ -220,6 +220,7 @@ __LA_DECL const char *  archive_libattr_version(void);
+ __LA_DECL const char *  archive_libiconv_version(void);
+ __LA_DECL const char *  archive_libpcre_version(void);
+ __LA_DECL const char *  archive_libpcre2_version(void);
++__LA_DECL const char *  archive_inflatelib_version(void);
+ 
+ /* Declare our basic types. */
+ struct archive;
+diff --git a/libarchive/archive_read_support_format_zip.c b/libarchive/archive_read_support_format_zip.c
+index 8e5566d..7f9bef8 100644
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -63,6 +63,9 @@
+ #ifdef HAVE_ZSTD_H
+ #include <zstd.h>
+ #endif
++#ifdef HAVE_INFLATELIB_H
++#include <inflatelib.h>
++#endif
+ 
+ #include "archive.h"
+ #include "archive_digest_private.h"
+@@ -216,6 +219,11 @@ struct zip {
+ 	char            zstdstream_valid;
+ #endif
+ 
++#ifdef HAVE_INFLATELIB_H
++	inflatelib_stream	inflstream;
++	char			inflstream_valid;
++#endif
++
+ 	IByteIn			zipx_ppmd_stream;
+ 	ssize_t			zipx_ppmd_read_compressed;
+ 	CPpmd8			ppmd8;
+@@ -285,6 +293,11 @@ static int
+ zip_read_data_deflate(struct archive_read *a, const void **buff,
+ 	size_t *size, int64_t *offset);
+ #endif
++#ifdef HAVE_INFLATELIB_H
++static int
++zip_read_data_deflate64(struct archive_read *a, const void **buff,
++	size_t *size, int64_t *offset);
++#endif
+ #if HAVE_LZMA_H && HAVE_LIBLZMA
+ static int
+ zip_read_data_zipx_lzma_alone(struct archive_read *a, const void **buff,
+@@ -1537,6 +1550,13 @@ zip_read_local_file_header(struct archive_read *a, struct archive_entry *entry,
+ 						&linkname_full_length, NULL);
+ 					break;
+ #endif
++#if HAVE_INFLATELIB_H
++				case 9: /* Deflate64 compression. */
++					zip->entry_bytes_remaining = zip_entry->compressed_size;
++					status = zip_read_data_deflate64(a, &uncompressed_buffer,
++						&linkname_full_length, NULL);
++					break;
++#endif
+ #if HAVE_LZMA_H && HAVE_LIBLZMA
+ 				case 14: /* ZIPx LZMA compression. */
+ 					/*(see zip file format specification, section 4.4.5)*/
+@@ -3155,6 +3175,119 @@ zip_read_data_deflate(struct archive_read *a, const void **buff,
+ }
+ #endif
+ 
++#ifdef HAVE_INFLATELIB_H
++static int
++zip_deflate64_init(struct archive_read *a, struct zip *zip)
++{
++	int r;
++
++	/* If we haven't yet read any data, initialize the decompressor. */
++	if (!zip->decompress_init) {
++		if (zip->inflstream_valid)
++			r = inflatelib_reset(&zip->inflstream);
++		else
++			r = inflatelib_init(&zip->inflstream);
++		if (r == INFLATELIB_ERROR_OOM) {
++			archive_set_error(&a->archive, ENOMEM,
++			    "No memory for ZIP decompression");
++			return (ARCHIVE_FATAL);
++		}
++		if (r != INFLATELIB_OK) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Can't initialize ZIP decompression");
++			return (ARCHIVE_FATAL);
++		}
++		zip->inflstream_valid = 1;
++		zip->decompress_init = 1;
++	}
++	return (ARCHIVE_OK);
++}
++
++static int
++zip_read_data_deflate64(struct archive_read *a, const void **buff,
++    size_t *size, int64_t *offset)
++{
++	struct zip *zip = a->format->data;
++	ssize_t bytes_avail, to_consume;
++	const void *compressed_buff, *sp;
++	int r;
++
++	(void)offset; /* UNUSED */
++
++	/* The same buffer and size as zip_read_data_deflate. */
++	if (zip->uncompressed_buffer == NULL) {
++		zip->uncompressed_buffer_size = 256 * 1024;
++		zip->uncompressed_buffer
++		    = malloc(zip->uncompressed_buffer_size);
++		if (zip->uncompressed_buffer == NULL) {
++			archive_set_error(&a->archive, ENOMEM,
++			    "No memory for ZIP decompression");
++			return (ARCHIVE_FATAL);
++		}
++	}
++
++	r = zip_deflate64_init(a, zip);
++	if (r != ARCHIVE_OK)
++		return (r);
++
++	compressed_buff = sp = __archive_read_ahead(a, 1, &bytes_avail);
++	if (0 == (zip->entry->zip_flags & ZIP_LENGTH_AT_END)
++	    && bytes_avail > zip->entry_bytes_remaining) {
++		bytes_avail = (ssize_t)zip->entry_bytes_remaining;
++	}
++	if (bytes_avail < 0) {
++		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
++		    "Truncated ZIP file body");
++		return (ARCHIVE_FATAL);
++	}
++
++	zip_read_decrypt(zip, compressed_buff, bytes_avail,
++	    &compressed_buff, &bytes_avail, &sp);
++
++	zip->inflstream.next_in = compressed_buff;
++	zip->inflstream.avail_in = (size_t)bytes_avail;
++	zip->inflstream.total_in = 0;
++	zip->inflstream.next_out = zip->uncompressed_buffer;
++	zip->inflstream.avail_out = zip->uncompressed_buffer_size;
++	zip->inflstream.total_out = 0;
++
++	r = inflatelib_inflate64(&zip->inflstream);
++	switch (r) {
++	case INFLATELIB_OK:
++		break;
++	case INFLATELIB_EOF:
++		zip->end_of_entry = 1;
++		break;
++	default:
++		/* inflatelib_init allocates all memory up front, so
++		 * inflatelib_inflate64 never fails with OOM. */
++		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++		    "ZIP decompression failed (%d)", r);
++		return (ARCHIVE_FATAL);
++	}
++
++	/* Consume as much as the decompressor actually used. */
++	to_consume = (ssize_t)zip->inflstream.total_in;
++	__archive_read_consume(a, to_consume);
++	zip->entry_bytes_remaining -= to_consume;
++	zip->entry_compressed_bytes_read += to_consume;
++	zip->entry_uncompressed_bytes_read += zip->inflstream.total_out;
++
++	zip_read_decrypt_update(zip, to_consume, sp);
++
++	if (zip->end_of_entry && zip->hctx_valid) {
++		r = check_authentication_code(a, NULL);
++		if (r != ARCHIVE_OK)
++			return (r);
++	}
++
++	*size = (size_t)zip->inflstream.total_out;
++	*buff = zip->uncompressed_buffer;
++
++	return (ARCHIVE_OK);
++}
++#endif
++
+ static int
+ read_decryption_header(struct archive_read *a)
+ {
+@@ -3604,6 +3737,11 @@ archive_read_format_zip_read_data(struct archive_read *a,
+ 	case 8: /* Deflate compression. */
+ 		r =  zip_read_data_deflate(a, buff, size, offset);
+ 		break;
++#endif
++#ifdef HAVE_INFLATELIB_H
++	case 9: /* Deflate64 compression. */
++		r = zip_read_data_deflate64(a, buff, size, offset);
++		break;
+ #endif
+ 	default: /* Unsupported compression. */
+ 		/* Return a warning. */
+@@ -3708,6 +3846,11 @@ archive_read_format_zip_cleanup(struct archive_read *a)
+ 	}
+ #endif
+ 
++#ifdef HAVE_INFLATELIB_H
++	if (zip->inflstream_valid)
++		inflatelib_destroy(&zip->inflstream);
++#endif
++
+ 	free(zip->uncompressed_buffer);
+ 
+ 	if (zip->ppmd8_valid)
+@@ -4566,6 +4709,9 @@ zip_read_mac_metadata(struct archive_read *a, struct archive_entry *entry,
+ 		}
+ #ifdef HAVE_ZLIB_H
+ 	case 8: /* Deflate compression. */
++#endif
++#ifdef HAVE_INFLATELIB_H
++	case 9: /* Deflate64 compression. */
+ #endif
+ 		break;
+ 	default: /* Unsupported compression. */
+@@ -4677,6 +4823,41 @@ zip_read_mac_metadata(struct archive_read *a, struct archive_entry *entry,
+ 			mp += zip->stream.total_out;
+ 			break;
+ 		}
++#endif
++#ifdef HAVE_INFLATELIB_H
++		case 9: /* Deflate64 compression. */
++		{
++			int r;
++
++			ret = zip_deflate64_init(a, zip);
++			if (ret != ARCHIVE_OK)
++				goto exit_mac_metadata;
++			zip->inflstream.next_in = p;
++			zip->inflstream.avail_in = (size_t)bytes_avail;
++			zip->inflstream.total_in = 0;
++			zip->inflstream.next_out = mp;
++			zip->inflstream.avail_out = (size_t)metadata_bytes;
++			zip->inflstream.total_out = 0;
++
++			r = inflatelib_inflate64(&zip->inflstream);
++			switch (r) {
++			case INFLATELIB_OK:
++				break;
++			case INFLATELIB_EOF:
++				eof = 1;
++				break;
++			default:
++				archive_set_error(&a->archive,
++				    ARCHIVE_ERRNO_MISC,
++				    "ZIP decompression failed (%d)", r);
++				ret = ARCHIVE_FATAL;
++				goto exit_mac_metadata;
++			}
++			bytes_used = (size_t)zip->inflstream.total_in;
++			metadata_bytes -= (size_t)zip->inflstream.total_out;
++			mp += zip->inflstream.total_out;
++			break;
++		}
+ #endif
+ 		default:
+ 			bytes_used = 0;
+diff --git a/libarchive/archive_version_details.c b/libarchive/archive_version_details.c
+index a0c2ae5..63e74ce 100644
+--- a/libarchive/archive_version_details.c
++++ b/libarchive/archive_version_details.c
+@@ -78,6 +78,9 @@
+ #if HAVE_PCRE2_H
+ #include <pcre2.h>
+ #endif
++#if HAVE_INFLATELIB_H
++#include <inflatelib.h>
++#endif
+ 
+ #include "archive.h"
+ #include "archive_private.h"
+@@ -181,6 +184,7 @@ archive_version_details(void)
+ 	const char *libacl = archive_libacl_version();
+ 	const char *librichacl = archive_librichacl_version();
+ 	const char *libattr = archive_libattr_version();
++	const char *inflatelib = archive_inflatelib_version();
+ 
+ 	if (!init) {
+ 		archive_string_init(&str);
+@@ -234,6 +238,10 @@ archive_version_details(void)
+ 			archive_strcat(&str, " libiconv/");
+ 			archive_strcat(&str, libiconv);
+ 		}
++		if (inflatelib) {
++			archive_strcat(&str, " inflatelib/");
++			archive_strcat(&str, inflatelib);
++		}
+ 		init = 1;
+ 	}
+ 	return str.s;
+@@ -528,3 +536,13 @@ archive_libpcre2_version(void)
+ 	return NULL;
+ #endif
+ }
++
++const char *
++archive_inflatelib_version(void)
++{
++#if HAVE_INFLATELIB_H
++	return inflatelib_version();
++#else
++	return NULL;
++#endif
++}
