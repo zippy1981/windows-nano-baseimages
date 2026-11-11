@@ -12,7 +12,7 @@ This folder holds the [Claude Code subagents](https://docs.claude.com/en/docs/cl
 | `release-engineer` | `build-libarchive.yml`, `watch-upstream.yml` and `scripts/trigger-latest-release.sh`: idempotent `vX.Y.Z` and `static-X.Y.Z` releases. | sonnet | Read, Glob, Grep, Write, Edit, Bash |
 | `cicd-engineer` | CI/CD design: hosted Linux builds, caching, releases, how the Windows images are built for 2019, 2022 and 2025, and permissions. | opus | Read, Glob, Grep, Write, Edit, Bash, PowerShell, WebFetch |
 | `workflow-author` | Workflow YAML to `cicd-engineer`'s design, checked with actionlint. | sonnet | Read, Glob, Grep, Write, Edit, Bash |
-| `container-author` | The Windows Nano Server Dockerfiles and `build.cmd`: tar, curl, jq, edit, pwsh and future tools. Hands Dockerfile documentation to `markdown-reviewer`. | sonnet | Read, Glob, Grep, Write, Edit, WebFetch, Agent |
+| `container-author` | The Windows Nano Server Dockerfiles and `build.cmd`: tar, curl, jq, yq, edit, pwsh and future tools. Hands Dockerfile documentation to `markdown-reviewer`. | sonnet | Read, Glob, Grep, Write, Edit, WebFetch, Agent |
 | `windows-dockerfile-reviewer` | Read-only review of the Windows Dockerfiles for Nano Server pitfalls, licences and size. | opus | Read, Glob, Grep |
 | `windows-container-builder` | Builds the Windows images on the Windows engine, one version at a time. | sonnet | PowerShell, Read, Glob, Grep |
 | `windows-container-tester` | Smoke-tests every tool in the images on 2019, 2022 and 2025. | sonnet | PowerShell, Read, Glob, Grep |

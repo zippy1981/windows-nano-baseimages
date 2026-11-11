@@ -1,4 +1,4 @@
-# nanoserver-base: Nano Server with a modern tar (libarchive bsdtar 3.8), jq and Microsoft Edit on PATH, and the
+# nanoserver-base: Nano Server with a modern tar (libarchive bsdtar 3.8), jq, yq and Microsoft Edit on PATH, and the
 # Visual C++ runtime DLLs in System32.
 #
 # The tools are in C:\tools\bin, which comes first on the machine PATH, so tar finds this repo's bsdtar instead of
@@ -41,6 +41,11 @@ ENV JQ_VERSION=1.8.2 \
 ENV EDIT_VERSION=2.0.0 \
     EDIT_SHA256=97b8f2c667faea8f211af5f9c879602949164911d74d16f540bbe31ad46c14cb \
     EDIT_LICENSE_SHA256=d25deed12d803f6c973597348627b1939e2d19bbc28fda83c93ea0cde44702da
+# yq: https://github.com/mikefarah/yq/releases. YQ_SHA256 is the SHA-256 column of the release's checksums file (the
+# column checksums_hashes_order names). The release has no licence file, so LICENSE comes from the same tag.
+ENV YQ_VERSION=4.54.3 \
+    YQ_SHA256=066ea0a09a282e47588ec1e1867280ff5ede458f7183617a2d99012e4e34f18a \
+    YQ_LICENSE_SHA256=697db34dabb21562fe84487a2ccd031fbd45382b89c2cbdec8ef31682c486040
 
 COPY Save-VerifiedFile.ps1 C:/build/
 
@@ -53,7 +58,11 @@ RUN C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\libarchive.zip -Sha256 $
     C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\edit.zip -Sha256 ${env:EDIT_SHA256} \
         -Uri ('https://github.com/microsoft/edit/releases/download/v' + ${env:EDIT_VERSION} + '/edit-' + ${env:EDIT_VERSION} + '-x86_64-windows.zip'); \
     C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\edit-LICENSE -Sha256 ${env:EDIT_LICENSE_SHA256} \
-        -Uri ('https://raw.githubusercontent.com/microsoft/edit/v' + ${env:EDIT_VERSION} + '/LICENSE')
+        -Uri ('https://raw.githubusercontent.com/microsoft/edit/v' + ${env:EDIT_VERSION} + '/LICENSE'); \
+    C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\yq.exe -Sha256 ${env:YQ_SHA256} \
+        -Uri ('https://github.com/mikefarah/yq/releases/download/v' + ${env:YQ_VERSION} + '/yq_windows_amd64.exe'); \
+    C:\build\Save-VerifiedFile.ps1 -OutFile C:\download\yq-LICENSE -Sha256 ${env:YQ_LICENSE_SHA256} \
+        -Uri ('https://raw.githubusercontent.com/mikefarah/yq/v' + ${env:YQ_VERSION} + '/LICENSE')
 
 # Our own release zip uses plain Deflate, so Expand-Archive can unpack it. Edit's zip is unpacked with the bsdtar it
 # contains, never with Windows' tar (see the windows-nano-demos failures in issue 5). edit.pdb is left out.
@@ -68,6 +77,9 @@ RUN Expand-Archive -Path C:\download\libarchive.zip -DestinationPath C:\unpack; 
     Copy-Item -Path C:\download\jq.exe -Destination $bin; \
     New-Item -ItemType Directory -Path ($lic + '\jq') | Out-Null; \
     Copy-Item -Path C:\download\jq-COPYING -Destination ($lic + '\jq\COPYING'); \
+    Copy-Item -Path C:\download\yq.exe -Destination $bin; \
+    New-Item -ItemType Directory -Path ($lic + '\yq') | Out-Null; \
+    Copy-Item -Path C:\download\yq-LICENSE -Destination ($lic + '\yq\LICENSE'); \
     & ($bin.FullName + '\tar.exe') -xf C:\download\edit.zip -C C:\unpack; if ($LASTEXITCODE) { throw ('tar failed on edit.zip: ' + $LASTEXITCODE) }; \
     Copy-Item -Path ('C:\unpack\edit-' + ${env:EDIT_VERSION} + '-x86_64-windows\edit.exe') -Destination $bin; \
     New-Item -ItemType Directory -Path ($lic + '\edit') | Out-Null; \

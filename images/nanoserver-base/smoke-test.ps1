@@ -60,6 +60,7 @@ function Get-Pin([string] $Name) {
 $pins = @{
     libarchive = Get-Pin 'LIBARCHIVE_VERSION'
     jq = Get-Pin 'JQ_VERSION'
+    yq = Get-Pin 'YQ_VERSION'
 }
 
 $failures = [Collections.Generic.List[string]]::new()
@@ -81,6 +82,8 @@ $commands = [ordered]@{
     'curl' = 'curl -V'
     'jq' = 'jq --version'
     'jq-filter' = 'echo {"a":[1,2]}| jq -c .a'
+    'yq' = 'yq --version'
+    'yq-filter' = 'echo a: [1, 2]| yq -o=json -I=0 .a'
     'edit' = 'edit --version'
     'https' = 'curl -fsSL https://github.com/jqlang/jq/releases/download/jq-1.8.2/sha256sum.txt'
     'licenses' = 'dir /b /s C:\tools\licenses'
@@ -194,6 +197,8 @@ foreach ($tool in 'tar', 'bsdcpio', 'bsdcat', 'bsdunzip') {
 Test-Command 'curl' '(?i)Schannel' 'curl with Schannel'
 Test-Command 'jq' "^jq-$([regex]::Escape($pins.jq))$" "jq-$($pins.jq)"
 Test-Command 'jq-filter' '^\[1,2\]$' '[1,2]'
+Test-Command 'yq' "^yq \(https://github\.com/mikefarah/yq/\) version v$([regex]::Escape($pins.yq))$" "yq v$($pins.yq)"
+Test-Command 'yq-filter' '^\[1,2\]$' '[1,2] from YAML'
 # Edit v2.0.0 reports its own version string (1.2.1), so only the exit code is checked
 Test-Command 'edit' '' ''
 Test-Command 'https' 'jq-windows-amd64\.exe' 'the jq sha256sum.txt over HTTPS'
@@ -208,7 +213,7 @@ foreach ($dll in $redistributables) {
     else { $summary.Add("| FileVersion of ``$dll`` | 0 | ``$($info.FileVersion)`` |") }
 }
 Test-Command 'vcredist-notice' ('(?s)' + (($redistributables | ForEach-Object { [regex]::Escape($_) }) -join '.*') + '.*Redistributable \(x64\) ' + [regex]::Escape((Get-Pin 'VCREDIST_VERSION'))) 'the Visual C++ NOTICE naming every DLL and the pinned version'
-foreach ($tool in 'libarchive', 'jq', 'edit', 'vcredist') {
+foreach ($tool in 'libarchive', 'jq', 'yq', 'edit', 'vcredist') {
     if (-not ((Read-Result 'licenses').Output -match "(?i)^C:\\tools\\licenses\\$tool\\")) { $failures.Add("licenses: nothing in C:\tools\licenses\$tool") }
 }
 $curlInfo = (Read-Result 'curl').Output

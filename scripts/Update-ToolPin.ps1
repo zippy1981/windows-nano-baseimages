@@ -5,7 +5,7 @@ request per tool.
 
 .DESCRIPTION
 Run by .github/workflows/watch-tool-versions.yml. For each tool it finds the latest release, takes the SHA-256 from
-upstream's published checksums where there are any (jq's sha256sum.txt, PowerShell's hashes.sha256), otherwise the
+upstream's published checksums where there are any (jq's sha256sum.txt, yq's checksums, PowerShell's hashes.sha256), otherwise the
 digest GitHub records for the release asset, and recomputes the hash of any licence file fetched from the same tag.
 It then rewrites that tool's ENV block, commits to bump/<tool>-<version>, pushes, opens a pull request unless one
 is already open, and dispatches the nanoserver-base and markdownlint workflows on the branch.
@@ -15,7 +15,7 @@ started with workflow_dispatch, which does. Their check runs are on the branch's
 pull request.
 
 .PARAMETER Tool
-Only check these tools. Defaults to all: libarchive, jq, edit, powershell.
+Only check these tools. Defaults to all: libarchive, jq, yq, edit, powershell.
 
 .PARAMETER DryRun
 Report what would change, and change nothing (no files, git, or GitHub writes).
@@ -26,8 +26,8 @@ Report what would change, and change nothing (no files, git, or GitHub writes).
 [CmdletBinding()]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'CI log output and GitHub workflow commands (::error::) go to the host on purpose')]
 param(
-    [ValidateSet('libarchive', 'jq', 'edit', 'powershell')]
-    [string[]] $Tool = @('libarchive', 'jq', 'edit', 'powershell'),
+    [ValidateSet('libarchive', 'jq', 'yq', 'edit', 'powershell')]
+    [string[]] $Tool = @('libarchive', 'jq', 'yq', 'edit', 'powershell'),
 
     [switch] $DryRun
 )
@@ -81,6 +81,26 @@ function Get-Tool([string] $Name) {
                     JQ_VERSION = $v
                     JQ_SHA256 = $exe
                     JQ_COPYING_SHA256 = Get-UrlSha256 "https://raw.githubusercontent.com/jqlang/jq/$($r.tag_name)/COPYING"
+                } }
+        }
+        'yq' {
+            $r = Get-LatestRelease 'mikefarah/yq' '^v\d+\.\d+\.\d+$'
+            $v = $r.tag_name -replace '^v', ''
+            # checksums has one line per asset: its name, then one hash per algorithm, in the order
+            # checksums_hashes_order lists them
+            $base = "https://github.com/mikefarah/yq/releases/download/$($r.tag_name)"
+            $text = { param($Uri) $c = (Invoke-WebRequest -Uri $Uri).Content; ($c -is [byte[]]) ? [Text.Encoding]::UTF8.GetString($c) : $c }
+            $order = @((& $text "$base/checksums_hashes_order") -split '\r?\n' | Where-Object { $_ })
+            $column = [array]::IndexOf($order, 'SHA-256')
+            if ($column -lt 0) { throw 'checksums_hashes_order has no SHA-256' }
+            $line = (& $text "$base/checksums") -split '\r?\n' | Where-Object { $_ -match '^yq_windows_amd64\.exe\s' }
+            if (-not $line) { throw 'yq_windows_amd64.exe is not in checksums' }
+            $exe = (-split $line)[$column + 1]
+            if ($exe -notmatch '^[0-9a-f]{64}$') { throw "checksums gives yq_windows_amd64.exe the SHA-256 '$exe'" }
+            @{ Dockerfile = 'images/nanoserver-base/Dockerfile'; Version = $v; Pins = [ordered]@{
+                    YQ_VERSION = $v
+                    YQ_SHA256 = $exe
+                    YQ_LICENSE_SHA256 = Get-UrlSha256 "https://raw.githubusercontent.com/mikefarah/yq/$($r.tag_name)/LICENSE"
                 } }
         }
         'edit' {

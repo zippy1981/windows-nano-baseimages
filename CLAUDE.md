@@ -1,6 +1,6 @@
 # windows-nano-baseimages
 
-Production-quality Windows Nano Server base images for ltsc2019, ltsc2022 and ltsc2025. They stay light but are usable out of the box: a current `tar.exe` that this repo compiles from [libarchive](https://github.com/libarchive/libarchive), plus downloaded, pinned builds of jq, [Microsoft Edit](https://github.com/microsoft/edit) 2.0 and PowerShell 7 (in the `-pwsh` tags). curl is Windows' own. Other tools will be added the same way.
+Production-quality Windows Nano Server base images for ltsc2019, ltsc2022 and ltsc2025. They stay light but are usable out of the box: a current `tar.exe` that this repo compiles from [libarchive](https://github.com/libarchive/libarchive), plus downloaded, pinned builds of jq, yq, [Microsoft Edit](https://github.com/microsoft/edit) 2.0 and PowerShell 7 (in the `-pwsh` tags). curl is Windows' own. Other tools will be added the same way.
 
 Issues describe the work (`gh issue list`). Issue #1 is the libarchive build system: an MXE cross-compile environment in a Linux container, plus build, packaging, release and upstream-watch automation. **Linux builds run on GitHub-hosted runners** (`ubuntu-latest`), not on this host: the user decided that after the issue was written, so its persistent self-hosted MXE runner and `Run-MxeRunner.ps1` are optional. Build the MXE image in CI and cache it (for example in GHCR, `ghcr.io/zippy1981/...`), so a libarchive build doesn't rebuild MXE. Hosted jobs time out after 6 hours. `.claude/agents/README.md` says which agent owns what.
 
@@ -9,6 +9,7 @@ Issues describe the work (`gh issue list`). Issue #1 is the libarchive build sys
 - **tar (bsdtar) and the other libarchive tools:** built here with MXE (`x86_64-w64-mingw32.static`), and published as GitHub releases of this repo (`vX.Y.Z` for the full packages, `static-X.Y.Z` for the static tools only). The images download the `static-X.Y.Z` release asset. They never use Windows' own `tar.exe`, which is old on ltsc2019 and ltsc2022 and can't read zstd there.
 - **curl:** Windows' own `C:\Windows\System32\curl.exe` (Schannel). curl.se's LibreSSL build can't verify HTTPS on Nano Server, so it isn't shipped (`docs/adr/0007`).
 - **jq:** `jq-windows-amd64.exe` from <https://github.com/jqlang/jq/releases>.
+- **yq:** `yq_windows_amd64.exe` from <https://github.com/mikefarah/yq/releases>.
 - **Microsoft Edit:** `edit-<v>-x86_64-windows.zip` from <https://github.com/microsoft/edit/releases>.
 - **PowerShell 7:** `PowerShell-<v>-win-x64.zip` from <https://github.com/PowerShell/PowerShell/releases>.
 
