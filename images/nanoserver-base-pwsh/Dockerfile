@@ -24,8 +24,8 @@ FROM ${DOWNLOAD_IMAGE} AS download
 SHELL ["powershell", "-NoLogo", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 # PowerShell 7: https://github.com/PowerShell/PowerShell/releases
-ENV POWERSHELL_VERSION=7.6.9 \
-    POWERSHELL_SHA256=ce7484804c0f0ad4dda10c958e71acdaf7eebfb22505c1b480f89e0e9f1da94d
+ENV POWERSHELL_VERSION=7.7.0 \
+    POWERSHELL_SHA256=7c74e03b20a75b59715847439d046a6214b1863ee79b187872980f139bb4a05f
 
 RUN $zip = 'C:\download\PowerShell.zip'; \
     New-Item -ItemType Directory -Path C:\download | Out-Null; \
